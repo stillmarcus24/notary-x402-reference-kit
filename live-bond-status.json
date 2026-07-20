@@ -1,0 +1,18 @@
+{
+  "_note": "Live snapshot pulled 2026-07-20 from the running notary. Independently re-verifiable: call USDC.balanceOf(wallet) on Base mainnet at asset_contract below. This is not a mock or a claim — it is a real, self-custodied, on-chain USDC bond that pays out on a lost dispute.",
+  "bond_id": "stillos-correctness-bond-v1",
+  "established": "2026-07-12",
+  "wallet": "0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf",
+  "network": "base",
+  "asset": "USDC",
+  "asset_contract": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  "bonded_usd": 10,
+  "per_verdict_max_usd": 1,
+  "onchain_balance_usd": 10.79,
+  "active": true,
+  "slash_count": 0,
+  "slashed_total_usd": 0,
+  "slash_policy": "A signed StillOS verdict/receipt is SLASHABLE if, within its stated validity window, its externally-anchored claim is proven false against the SAME named source-of-record the receipt cited. Claim path: POST /dispute with the receipt_hash plus counter-evidence. Resolution: independent re-run of the receipt's resolver. If the re-run overturns the original verdict, the disputant is paid up to per_verdict_max_usd from the bond wallet, on-chain, and the payout is appended to the public slash log. Scope: deterministic-observable verdicts only (merged PR, on-chain event, HTTP read bound to a named source-of-record). Stochastic or opinion outputs are explicitly out of scope and are NOT bonded.",
+  "claim_endpoint": "https://nolawealthfinancial.com/notary/dispute",
+  "verify_balance_instructions": "Call USDC.balanceOf(wallet) on Base mainnet (asset_contract above) via https://mainnet.base.org. The bond is ACTIVE only while that on-chain balance is >= bonded_usd — check the chain, not this file."
+}

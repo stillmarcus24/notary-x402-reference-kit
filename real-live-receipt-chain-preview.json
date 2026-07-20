@@ -1,0 +1,103 @@
+{
+  "notary_fingerprint": "921e3af51250a1f5",
+  "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsFIB67A7w7j7oLHjuJeErxMpq2VTZyUXD2785nbgqMM=\n-----END PUBLIC KEY-----\n",
+  "how_to_verify": "Recompute each receipt_hash = SHA256(JSON.stringify({agent,claim_sha256,ts,prev_hash,notary_fp,resolver_hash?})) in that key order, check it matches, check prev_hash chains to the prior receipt_hash in order, and verify the signature against public_key.",
+  "exported_at": "2026-07-20T12:59:32.849Z",
+  "receipts": [
+    {
+      "agent": "marcus-session",
+      "claim_sha256": "cdf2b816f86b51cb51086921c3d712f8bf3d5aac74c4915ec06ba0ac482b7e34",
+      "ts": "2026-07-19T16:09:02.419Z",
+      "prev_hash": "1941291991c65694ad1c108c1cd0d827a36f20313a6de9c29a9b8ef95e66b620",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "2989104ef91115cd555eea2a721839b15d3ddc11e32d9f2bc92f3065ab3663d5",
+      "signature": "pPkcII7mLcu9uc/u19/sgYjEjdo/R7EazJ+hKjzkmDThZL6n7nWboZwxeNV7YavnoM2omcaP1fqXfhT+14ivAw=="
+    },
+    {
+      "agent": "marcus-session",
+      "claim_sha256": "9585d02427bede8589271fcc88c8d1163d4be57653d0c5b21ba5a556cd24e1f2",
+      "ts": "2026-07-19T16:26:14.224Z",
+      "prev_hash": "2989104ef91115cd555eea2a721839b15d3ddc11e32d9f2bc92f3065ab3663d5",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "49e413ccfa1b1bf89f6f7ff49f476c762a461d80272078f7bd2fc4b843a8ded5",
+      "signature": "UP4yCWfyx+tmpqgl++egHWhnt51hgX24KgSlp6OjA16uAhAjZ7Xi3w+DZPVr+cuhZsDDcPzy5MSyyqNgpRyTBQ=="
+    },
+    {
+      "agent": "marcus-session",
+      "claim_sha256": "142855a7d16c912d49a5f25099250f48f71178d0cdc84ee2c16ac3b88f87a291",
+      "ts": "2026-07-19T16:34:03.092Z",
+      "prev_hash": "49e413ccfa1b1bf89f6f7ff49f476c762a461d80272078f7bd2fc4b843a8ded5",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "1aa6b00038588b4f82acd3c37ed08454b4c3138cb75b87b1ee91e1c62c361c1e",
+      "signature": "APtAXnbqnLHyUBTzvQPFJxE8ULKh6l/PT4l84MXnUtZiIgcpAT/Xina3zyAZX/2JkXAyjufrCFAwShZKj7fQBw=="
+    },
+    {
+      "agent": "marcus-session",
+      "claim_sha256": "3300850404eab5a6e9d551e0efd12468e6825af8608f44da2e88d5e64cbae741",
+      "ts": "2026-07-19T17:02:56.485Z",
+      "prev_hash": "1aa6b00038588b4f82acd3c37ed08454b4c3138cb75b87b1ee91e1c62c361c1e",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "010af90956b4d0abad1a127cfd077d5be9eb57649099ed6dd872711b07de3302",
+      "signature": "5bWtSe1ZuGOZHXKE5B6vo6ttRx43Zd0hMFK6S7T7Up7Z81MoImMS38VXgp+BnkRXEgIjgqqlPti2c3uhVKQpAw=="
+    },
+    {
+      "agent": "stillos-sourcing-dossier",
+      "claim_sha256": "4c0b42a8a7213dc6cd7c9dd15da5184790447864c6c0ed72f5fb949794e274af",
+      "ts": "2026-07-20T00:25:31.768Z",
+      "prev_hash": "010af90956b4d0abad1a127cfd077d5be9eb57649099ed6dd872711b07de3302",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "ef5908e9cf25393d013d32bda3c1c0ac283f226b4e3ef7bcaa065d5f10eeb2dc",
+      "signature": "FBwaQovfwkhhGG69MMvqmviH4sgSVKHqtCfxA7DtlWcm5A1qwnIEB4QwJmTpE7ym7BoTpYE3l+kHDRcKkLScBQ=="
+    },
+    {
+      "agent": "stillos-sourcing-dossier",
+      "claim_sha256": "a51f363a6e16bde003604b78858fd1f8721041062ce7ef2aa818945af87412ca",
+      "ts": "2026-07-20T00:25:31.833Z",
+      "prev_hash": "ef5908e9cf25393d013d32bda3c1c0ac283f226b4e3ef7bcaa065d5f10eeb2dc",
+      "notary_fp": "921e3af51250a1f5",
+      "resolver_hash": "25f0a9c6a9fc4cc68b726fe5a45afe18e9a952dea559171e6df93649027d6932",
+      "receipt_hash": "c6647958c6177ef26e0d88c4d3a42759e945c7cde24933802b492d46afbe9f58",
+      "signature": "qr/w3bJQYvF6RIRF6CpKNoNyK6gk0bUlYXissfkrQIJDyqb2T94p2hQpnEqAV3/KGwle5MnCuU33rxJXsyCGAQ=="
+    },
+    {
+      "agent": "stillos-sourcing-dossier",
+      "claim_sha256": "29401d57cb1ae1b61ebcab41734e7cc58dab3c006edfcf4a32771cca5423d2fd",
+      "ts": "2026-07-20T00:25:53.419Z",
+      "prev_hash": "c6647958c6177ef26e0d88c4d3a42759e945c7cde24933802b492d46afbe9f58",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "0f02e7d1fcf417121d94b4d6732fdbeb0bf57959abb640d8737bcac600ab62e5",
+      "signature": "yjI9Sd9TC/yHAfbtgvbBwDaXQ0WRtFU9FiHAQCyb7kSD28SA01vgkDhy5vPcKmgjJt/eI2rEDqPcPtSS19KXAg=="
+    },
+    {
+      "agent": "stillos-sourcing-dossier",
+      "claim_sha256": "81d66cfb59fcb05f39a34119d8e158a446f8b1ba4a48e42a74507d75d33e73c7",
+      "ts": "2026-07-20T00:25:53.531Z",
+      "prev_hash": "0f02e7d1fcf417121d94b4d6732fdbeb0bf57959abb640d8737bcac600ab62e5",
+      "notary_fp": "921e3af51250a1f5",
+      "resolver_hash": "32585dc08e9629db168aa17bf24a9ff5d09d78c5935b50d586adcae6ac2597c6",
+      "receipt_hash": "45fabff530854419e2a75e824d24a93ea3629a9c1ac364cb2d3a09973e6af8b0",
+      "signature": "tdiFHSAfeF/QuLC1Q+yrtX3zC2QBPMS63piTS6vvQ2yPuy9MEEzsqzmav2DdexbT4RLGrb6bJhp1GxhFoaP6AA=="
+    },
+    {
+      "agent": "stillos-sourcing-dossier",
+      "claim_sha256": "8fe14686bd7666b1e40cb019ac9181eee357c6a72740f7f16a8c925859ce9ce4",
+      "ts": "2026-07-20T00:30:21.686Z",
+      "prev_hash": "45fabff530854419e2a75e824d24a93ea3629a9c1ac364cb2d3a09973e6af8b0",
+      "notary_fp": "921e3af51250a1f5",
+      "receipt_hash": "28046afdfd250ce4b191474b52ca9942e9b643ade9acd7b97f406ba6595122ba",
+      "signature": "iNm6Yo/T5FB+lPOhg7rDSV1kAx1bc6NZ+XeqFQwzhA01RhDUUinZXd+ZBZ0oB8bgpt412r/L2/QnbrCUrQMKDg=="
+    },
+    {
+      "agent": "stillos-sourcing-dossier",
+      "claim_sha256": "a317732dc650b3baca7962d2cc56ecdb055082b1007a4e67b4202c38ca1ddd81",
+      "ts": "2026-07-20T00:30:23.648Z",
+      "prev_hash": "28046afdfd250ce4b191474b52ca9942e9b643ade9acd7b97f406ba6595122ba",
+      "notary_fp": "921e3af51250a1f5",
+      "resolver_hash": "c6175cd688365e1f17da6132c5fcae439e7c79d07c3b3539a2407ea4fa0aad2d",
+      "receipt_hash": "0a26451db4c2fa1000f80c4bd887af83dabc3e1645edab72eb9287a1bbee4d48",
+      "signature": "xV0mKES8rwODPNrG7pe+PHZevnVvdYxtGir2/7uPqIDGv+Y259Lu/rVoZSwGIeNW4R/fiUGrLP8vQWYC/cJHBA=="
+    }
+  ],
+  "preview": true,
+  "note": "Preview: last 10 of 958 receipts. Full export: GET /export (x402, $2)."
+}

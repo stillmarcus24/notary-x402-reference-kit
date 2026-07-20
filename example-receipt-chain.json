@@ -1,0 +1,27 @@
+{
+  "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA03XBDOHu6tpwTk3EnTYovBiuWchVSo/WRrPwbTHTcYA=\n-----END PUBLIC KEY-----\n",
+  "notary_fp": "d8f4cfb36ada91ae",
+  "claim_receipt": {
+    "agent": "example-buyer-agent",
+    "claim_sha256": "61c4cdf58a3cb3255c14a4e4533a9ea4ed65de4dbfbca5bb024806eea53142f9",
+    "ts": "2026-07-20T12:00:00.000Z",
+    "prev_hash": "GENESIS",
+    "notary_fp": "d8f4cfb36ada91ae",
+    "receipt_hash": "23423ee111d95212f8238827a20567ca21a08364ca56c241b9ed9114e3086b71",
+    "signature": "TFIoDc92yV1dCLN6FFQNex9jyuHcOIBg7z4u6AQcLDY8DpJNCVgsmXsHwuvlW+7++fZE3UBbHVTAo8eNb92cBQ==",
+    "attestation_type": "sealed_claim",
+    "verify": "https://nolawealthfinancial.com/notary/verify?hash=23423ee111d95212f8238827a20567ca21a08364ca56c241b9ed9114e3086b71"
+  },
+  "verdict_receipt": {
+    "agent": "example-buyer-agent",
+    "claim_sha256": "7d4b7c604174fe82dc15891a3ce0dedf570a47c11918ba67cc4edade31e586db",
+    "ts": "2026-07-20T12:00:00.000Z",
+    "prev_hash": "23423ee111d95212f8238827a20567ca21a08364ca56c241b9ed9114e3086b71",
+    "notary_fp": "d8f4cfb36ada91ae",
+    "resolver_hash": "e541c685f435a03a599e5024b17516df21bd5a28c9348d7ceec5574977fb513c",
+    "receipt_hash": "357ee42b0c41eaea54e78405ce1dc98be88f293ab4cdf889ba57e8b33b220e7a",
+    "signature": "8R/d6P/WJGOJS1HgVSDYPQgxFPoJlES7iZvgxuP/HnOz1YUJVCUlfFOVAiEzDDIfdpa5lvmZXBH2ItZmlJagCA==",
+    "attestation_type": "resolved_verdict",
+    "verify": "https://nolawealthfinancial.com/notary/verify?hash=357ee42b0c41eaea54e78405ce1dc98be88f293ab4cdf889ba57e8b33b220e7a"
+  }
+}
