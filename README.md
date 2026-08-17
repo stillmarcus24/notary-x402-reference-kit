@@ -1,5 +1,7 @@
 # StillOS Notary — Evidence Record Reference Kit
 
+**[stillosdigitalholdings.com](https://stillosdigitalholdings.com)** — the company running the live notary this kit verifies.
+
 Companion to [x402-foundation/x402#2887](https://github.com/x402-foundation/x402/issues/2887).
 Everything here is independently runnable and independently verifiable — no
 account, no API key, no trust required.
