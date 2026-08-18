@@ -27,7 +27,7 @@ This kit lets you check that claim yourself instead of taking our word for it.
 
 ## What's in here
 
-- **`https://nolawealthfinancial.com/notary/verify-live`** — the primary
+- **`https://stillosdigitalholdings.com/notary/verify-live`** — the primary
   evidence, and it's not a file in this repo at all: it's a standing public
   page on the live notary itself. It re-reads the ENTIRE real receipt book
   (958 receipts as of 2026-07-20, not a sample) and re-verifies every
@@ -44,9 +44,9 @@ This kit lets you check that claim yourself instead of taking our word for it.
 - **`real-live-receipt-chain-preview.json` + `verify-live.js`** — an offline,
   point-in-time companion to the same evidence: the actual live notary's
   10-record free preview
-  (`https://nolawealthfinancial.com/notary/export?preview=true`), fetched
+  (`https://stillosdigitalholdings.com/notary/export?preview=true`), fetched
   live, verified against the actual production public key served live at
-  `https://nolawealthfinancial.com/notary/health`. Run `node verify-live.js`
+  `https://stillosdigitalholdings.com/notary/health`. Run `node verify-live.js`
   — zero dependencies, hardcodes nothing but the fetched data and the
   publicly-served key. Useful if you want a static artifact to check offline;
   the live page above is the standing, always-current version of the same
@@ -91,4 +91,4 @@ mechanism, same evidence-record substrate this thread is discussing.
   independent resolver re-run; overturned verdicts pay out from the bond
   on-chain.
 
-Full route list: `https://nolawealthfinancial.com/notary/.well-known/x402.json`
+Full route list: `https://stillosdigitalholdings.com/notary/.well-known/x402.json`

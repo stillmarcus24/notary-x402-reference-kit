@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Verifies the REAL production receipt chain — not a synthetic example.
-// Data pulled live from https://nolawealthfinancial.com/notary/export?preview=true
+// Data pulled live from https://stillosdigitalholdings.com/notary/export?preview=true
 // (free 10-record preview of the actual notary's real signed history) and the
-// real production public key from https://nolawealthfinancial.com/notary/health.
+// real production public key from https://stillosdigitalholdings.com/notary/health.
 // Run: node verify-live.js
 'use strict';
 const crypto = require('crypto');
@@ -30,5 +30,5 @@ data.receipts.forEach((r, i) => {
   prevExpected = r.receipt_hash;
 });
 console.log(`\nAll ${data.receipts.length} REAL production receipts verified: ${allOk}`);
-console.log('Verified against the real production key served live at https://nolawealthfinancial.com/notary/health');
+console.log('Verified against the real production key served live at https://stillosdigitalholdings.com/notary/health');
 process.exitCode = allOk ? 0 : 1;

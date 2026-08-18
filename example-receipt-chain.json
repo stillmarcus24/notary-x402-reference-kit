@@ -10,7 +10,7 @@
     "receipt_hash": "23423ee111d95212f8238827a20567ca21a08364ca56c241b9ed9114e3086b71",
     "signature": "TFIoDc92yV1dCLN6FFQNex9jyuHcOIBg7z4u6AQcLDY8DpJNCVgsmXsHwuvlW+7++fZE3UBbHVTAo8eNb92cBQ==",
     "attestation_type": "sealed_claim",
-    "verify": "https://nolawealthfinancial.com/notary/verify?hash=23423ee111d95212f8238827a20567ca21a08364ca56c241b9ed9114e3086b71"
+    "verify": "https://stillosdigitalholdings.com/notary/verify?hash=23423ee111d95212f8238827a20567ca21a08364ca56c241b9ed9114e3086b71"
   },
   "verdict_receipt": {
     "agent": "example-buyer-agent",
@@ -22,6 +22,6 @@
     "receipt_hash": "357ee42b0c41eaea54e78405ce1dc98be88f293ab4cdf889ba57e8b33b220e7a",
     "signature": "8R/d6P/WJGOJS1HgVSDYPQgxFPoJlES7iZvgxuP/HnOz1YUJVCUlfFOVAiEzDDIfdpa5lvmZXBH2ItZmlJagCA==",
     "attestation_type": "resolved_verdict",
-    "verify": "https://nolawealthfinancial.com/notary/verify?hash=357ee42b0c41eaea54e78405ce1dc98be88f293ab4cdf889ba57e8b33b220e7a"
+    "verify": "https://stillosdigitalholdings.com/notary/verify?hash=357ee42b0c41eaea54e78405ce1dc98be88f293ab4cdf889ba57e8b33b220e7a"
   }
 }
