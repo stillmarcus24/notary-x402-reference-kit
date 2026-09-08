@@ -1,0 +1,149 @@
+{
+  "manifest_version": "foreseal-stillos-interop-v1",
+  "date_created": "2026-09-06",
+  "status": "DRAFT_PRE_TEST_NOT_YET_EXECUTED",
+  "parties": {
+    "stillos": {
+      "implementation": "StillOS Notary (core/notary_service_marcus.cjs)",
+      "repo": "core (nested git repo at /home/marcus/core)",
+      "commit": "b2efdea85d89aa2849441f44a19c65b3a2db717e",
+      "file_checksums_sha256": {
+        "core/notary_service_marcus.cjs": "1993d3160e90fa9aad4c689ae02fd0d70f6666cc48d8fb9559523e7f6cfd8d37",
+        "core/verdict_dispute.cjs": "0ac165e3f54b8200426048ed1f65e808b1f2710900547ce5ba57c9603df43c14",
+        "core/notary_bond.cjs": "c5aca9e6e04927335227b94b4db6d233d33d4a826a569e55f16b657cc32114eb",
+        "core/notary_recovery_signer.cjs": "5a379cbbb7239f107c1b1e96d3993292e9e27bd36df3aaf65d4e14936f62d5fa",
+        "core/keyring.cjs": "fafcbe1feb2ea594e13577ff7eccc45eacef3adb5d7b61a67a00438fc5dd19e6"
+      },
+      "public_base_url": "https://stillosdigitalholdings.com/notary"
+    },
+    "foreseal": {
+      "implementation": "ForeSeal (as identified publicly by @0rkz on x402-foundation/x402#2887)",
+      "repo": "github.com/0rkz/foreseal-x402-conformance",
+      "commit": null,
+      "note": "Not yet supplied by ForeSeal as of manifest creation. To be filled in and re-hashed before any funds move."
+    }
+  },
+  "reference_source": {
+    "kind": "already-merged public GitHub pull request",
+    "why_this_reference": "Deterministic, keyless, re-runnable by anyone, controlled by neither party. Independently confirmed live against api.github.com on 2026-09-06.",
+    "repository": "python/cpython",
+    "pull_request_number": 154769,
+    "pull_request_url": "https://github.com/python/cpython/pull/154769",
+    "merged": true,
+    "merged_at": "2026-07-27T14:00:20Z",
+    "merge_commit_sha": "c7b9a13a7528342fdac47a2121248f0b989131e5"
+  },
+  "claim": {
+    "exact_text": "python/cpython pull request #154769 is merged.",
+    "expected_truth_condition": "GET https://api.github.com/repos/python/cpython/pulls/154769 returns merged:true and merge_commit_sha == c7b9a13a7528342fdac47a2121248f0b989131e5.",
+    "expected_verdict": "CONFIRMED",
+    "freshness": "permanent (once merged, this fact does not change)"
+  },
+  "resolver": {
+    "type": "github_pr",
+    "spec": { "type": "github_pr", "owner": "python", "repo": "cpython", "number": 154769 },
+    "implementation": "core/general_resolvers.cjs :: resolveGithubPR()",
+    "resolver_code_hash": "cb060461026e03d217648055ba85d85cacb6729dbe56fd1bfad7b94b30444221",
+    "source_queried": "https://api.github.com/repos/python/cpython/pulls/154769 (keyless, public GitHub REST API)",
+    "independent": true,
+    "settles_against": "https://github.com/python/cpython/pull/154769"
+  },
+  "lifecycle_steps": [
+    {
+      "step": 1,
+      "action": "ForeSeal calls POST /claim-verdict from a ForeSeal-controlled wallet, paying the x402-quoted price, with resolver spec above.",
+      "endpoint": "POST https://stillosdigitalholdings.com/notary/claim-verdict",
+      "must_not_use": "The free tier (no payment) does not return a verdict_receipt hash/signature to the caller and is NOT usable for this test -- confirmed live 2026-09-06 (signed:false, verdict_receipt:null on the free path)."
+    },
+    { "step": 2, "action": "StillOS returns a signed, hash-chained claim receipt AND a signed, hash-chained verdict receipt, both bound to the resolver above.", "authority": "core/notary_recovery_signer.cjs :: commit()" },
+    { "step": 3, "action": "StillOS resolves the claim against api.github.com in real time and posts the verdict inline in the same response.", "authority": "core/general_resolvers.cjs :: resolveGithubPR()" },
+    { "step": 4, "action": "ForeSeal verifies the verdict receipt OFFLINE: recompute receipt_hash, resolve notary_fp against the PINNED key/keyring below (not a live /notary/health call), verify Ed25519 signature, confirm chain to prior receipt.", "no_callback_required": true },
+    { "step": 5, "action": "ForeSeal files POST /dispute with receipt_hash + the exact verdict_object it received + the same resolver spec + counter-evidence/reason.", "endpoint": "POST https://stillosdigitalholdings.com/notary/dispute", "fee_usd": 1.00 },
+    { "step": 6, "action": "verdict_dispute.cjs re-runs the SAME resolver spec fresh, right now, and compares the fresh label to the original verdict label.", "expected_result": "REJECTED (fresh re-run reconfirms CONFIRMED, since the claim is objectively, permanently true) -- this is a valid, successful exercise of the full adjudication path, not a failed test. See dispute_semantics below." },
+    { "step": 7, "action": "IF (and only if) the dispute is UPHELD, a slash directive is queued (DRY-RUN, founder alert fired) -- NOT auto-paid. Marcus reviews and, if he approves, runs notary_bond_slash.cjs --execute manually.", "automatic_payout": false }
+  ],
+  "dispute_semantics": {
+    "scripted_exercise_disclosure": "Because the reference claim (an already-merged, permanent GitHub PR fact) is objectively true and cannot change, a good-faith dispute against it is EXPECTED to resolve REJECTED on re-run. This test is a SCRIPTED EXERCISE of the intake -> re-run -> terminal-state adjudication path, not an attempt to manufacture a false original verdict. A REJECTED terminal state is a successful, valid test outcome under this manifest, identical in evidentiary value to an UPHELD one -- both prove the mechanism runs against a real external counterparty. Neither party will characterize a REJECTED outcome as a failed test.",
+    "hash_binding": "The disputer must supply the exact verdict_object they were given; it is checked against the receipt's committed claim_sha256 before anything else runs -- a fabricated verdict_object is rejected before any write.",
+    "target_mutation_guard": "The fresh re-run's settles_against must equal the original verdict's settles_against, or the dispute is rejected -- a disputer cannot swap in an easier target.",
+    "dispute_window": "48 hours from the original verdict receipt's timestamp."
+  },
+  "signing_identity": {
+    "algorithm": "Ed25519",
+    "current_key_id_fingerprint": "21de066900082465",
+    "current_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEARz4QMQCVd+ImBqd3YmkIA3NYd857O+5dAWNhY7V2ryk=\n-----END PUBLIC KEY-----\n",
+    "key_effective_from": "2026-07-31T00:09:13.684Z",
+    "keyring_endpoint": "https://stillosdigitalholdings.com/notary/keyring",
+    "keyring_disclosure": "The active key has already rotated once (2026-06-27 key retired 2026-07-31, superseded by the key pinned above). GET /notary/keyring (added 2026-09-06) returns the full historical registry keyed by fingerprint so a receipt signed under ANY past or future key remains independently verifiable without ever trusting /notary/health's current contents at verification time.",
+    "foreseal_signing_key": null,
+    "verification_requires_no_callback_to_stillos": true,
+    "offline_verifier_script": "notary-x402-reference-kit/verify-offline-pinned.js (this repo)"
+  },
+  "wallets": {
+    "stillos_payto_wallet": {
+      "address": "0xfAB07d26F7627fc4cE459ecf90d7E015F7eEcE71",
+      "purpose": "Receives x402 settlement + dispute fees (operational revenue wallet, NOT the bond wallet)."
+    },
+    "stillos_bond_wallet": {
+      "address": "0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf",
+      "purpose": "Collateral only. Source of any slash payout. Independently verifiable via USDC.balanceOf on Base."
+    },
+    "foreseal_wallet": null
+  },
+  "fees": {
+    "currency": "USDC",
+    "chain": "Base mainnet",
+    "chain_id": 8453,
+    "token_contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "token_decimals": 6,
+    "settlement_fee_usd": { "current": 0.05, "current_valid_until": "2026-10-13T00:00:00Z", "after_current_valid_until": 0.25, "endpoint": "POST /claim-verdict", "note": "Time-bound launch pricing, disclosed here so the number cannot surprise either party mid-negotiation." },
+    "dispute_fee_usd": { "amount": 1.00, "endpoint": "POST /dispute", "free_tier": null, "note": "No free tier for /dispute. Non-refundable either way (anti-spam design), disclosed up front." },
+    "gas_responsibility": "x402 uses EIP-3009 transferWithAuthorization -- ForeSeal signs an off-chain authorization and pays ZERO gas. StillOS's facilitator submits the on-chain transfer and pays Base gas on both settlement and dispute-fee collection.",
+    "other_fees_in_this_lifecycle": "None. (POST /self-audit/dispute-entry at $2.00 is a separate, unrelated product surface and is explicitly out of scope for this test.)"
+  },
+  "exposure_caps": {
+    "foreseal_total_outlay_usd": { "typical": 1.05, "worst_case_if_run_after_2026-10-13": 1.25, "components": "settlement (0.05 or 0.25) + dispute (1.00)" },
+    "stillos_total_outlay_usd": { "max_bond_slash": 1.00, "condition": "only if the dispute is UPHELD, requires a separate Marcus-approved --execute to actually pay; never automatic", "gas_for_payout": "borne by the bond wallet's existing Base ETH balance, already funded above the required floor" },
+    "hard_stop_combined_usd": 2.00,
+    "abort_if_exceeded": true
+  },
+  "bond": {
+    "bond_id": "stillos-correctness-bond-v1",
+    "publicly_committed_target_usd": 10.00,
+    "per_verdict_max_usd": 1.00,
+    "onchain_balance_usd_at_manifest_creation": 0,
+    "active_at_manifest_creation": false,
+    "funding_status": "NOT YET FUNDED as of manifest creation -- see funding proposal in the accompanying report. Manifest will be re-hashed and re-published once funded, before any settlement is requested from ForeSeal.",
+    "wallet": "0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf",
+    "chain": "Base mainnet",
+    "token_contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "verify_instruction": "Anyone can independently call USDC.balanceOf(wallet) on Base mainnet. Do not trust this file or /notary/bond's numbers without checking the chain directly."
+  },
+  "expected_terminal_states": [
+    "settlement: settled:true on Base, payer wallet != any StillOS-controlled address",
+    "verdict: CONFIRMED (matches independent re-run of the same GitHub PR)",
+    "offline_verification: signature_valid AND hash_intact AND chain_intact, computed with zero network calls to StillOS",
+    "dispute: REJECTED (expected, since the claim is objectively true) OR UPHELD (would trigger a queued, non-automatic slash directive)",
+    "if UPHELD: slash_directive status QUEUED_PENDING_APPROVAL -- payout requires a separate explicit Marcus --execute, is not part of this test's automatic scope"
+  ],
+  "publication_terms": {
+    "both_parties_publish_independently": true,
+    "divergences_are_published": true,
+    "no_outcome_representation_before_both_reports_exist": true,
+    "not_a_partnership": true,
+    "not_an_endorsement": true,
+    "not_a_customer_relationship": true,
+    "not_a_commercial_integration": true,
+    "n_equals_1_disclosure": "This is a single controlled test. Neither party may cite it as statistical validation, general production reliability, or that the other party endorses the implementation."
+  },
+  "hard_stops": {
+    "abort_conditions": [
+      "resolver source/spec not mutually frozen in writing before step 1",
+      "any exposure exceeding the $2.00 combined hard stop",
+      "payer wallet turns out to be StillOS-controlled (would invalidate the test as a self-payment)",
+      "settlement amount does not match the fee disclosed in this manifest",
+      "resolver target does not match the frozen reference above",
+      "any automated money movement beyond what this manifest explicitly authorizes"
+    ]
+  }
+}

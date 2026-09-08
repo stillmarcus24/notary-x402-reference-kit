@@ -67,6 +67,22 @@ This kit lets you check that claim yourself instead of taking our word for it.
   sanctioned wallet" scenario end to end against the live, already-deployed
   screening endpoints.
 
+## Interop readiness (added 2026-09-08)
+
+Real work-in-progress toward two external interoperability exercises discussed on `x402-foundation/x402#2887` and `#3389`:
+
+- **`docs/CURRENT_STATE_2026-09-08.md`** — a from-scratch re-audit of every claim below against live production and Base mainnet, PASS/FAIL/PARTIAL with evidence for each line.
+- **`docs/STILLOS_NOTARY_RECEIPT_V1.md`** — the frozen digest contract: exact preimage, field order, canonicalization, and a signature gotcha worth knowing before you re-implement this.
+- **`docs/FEE_SCHEDULE_V1.md`** — every paid step, capped, both sides.
+- **`docs/FORESEAL_BILATERAL_TERMS_V1.md`** + **`manifest/`** — the frozen bilateral test terms with ForeSeal (@0rkz), restating their own stated preconditions and mapping each to its current status.
+- **`keys/`** — the signing key(s), pinned as static files, zero HTTP required to trust them.
+- **`verify-offline-pinned.js`** — a true offline verifier: zero network calls, Node stdlib only (`crypto`, `fs`), deterministic exit code.
+- **`vectors/`** — one real positive receipt + six adversarial negative vectors (content mutation, digest mutation, signature mutation, wrong signing key, chain-link mismatch, unknown key/version), each with its actual observed verifier output in `vectors/MANIFEST.json`.
+- **`vauban/`** — a local compatibility vector mapping a real StillOS receipt digest to Vauban's v3 foreign-leaf `digest_lo`/`digest_hi` encoding (`x402-foundation/x402#3389`). Explicitly labeled pre-interoperability — no claim of Vauban acceptance is made anywhere in this repo.
+- **`docs/READINESS_REPORT_V1.md`** — the honest scorecard: which gates are closed, which aren't, and why.
+
+The one real blocker left is economic, not technical: the correctness bond (`live-bond-status.json`, `keys/` above) is currently unfunded. Everything else a counterparty needs to independently verify is in this repository right now.
+
 ## Why this is a different layer than dispute-resolution-by-LLM-jury
 
 Other efforts in this space (e.g. GenLayer's Internet Court) resolve

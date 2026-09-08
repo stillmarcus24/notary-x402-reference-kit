@@ -1,0 +1,66 @@
+{
+  "manifest_version": "stillos-notary-vectors-v1",
+  "generated": "2026-09-08",
+  "verifier_command": "node ../verify-offline-pinned.js <file>",
+  "source_of_positive_vector": "Real live production receipt, agent=stillos-foreseal-preflight-check, pulled directly from state/proof-notary/receipts.jsonl (tail -1) on 2026-09-08. Not a synthetic fixture.",
+  "note_on_compound_failures": "Several negative vectors trip more than one check because the fields are cryptographically bound together by design (e.g. notary_fp and prev_hash are both part of the hashed core preimage, so mutating either one also breaks hash_intact). Each vector's 'reason' below names the PRIMARY thing it tests; 'all_checks_observed' records the complete, real output so nothing is hidden.",
+  "vectors": [
+    {
+      "file": "positive-01.json",
+      "kind": "positive",
+      "expected": "PASS",
+      "reason": "Genuine, unmodified production receipt. Every check must pass.",
+      "all_checks_observed": { "hash_intact": true, "key_known": true, "signature_valid": true, "all_pass": true },
+      "exit_code_observed": 0
+    },
+    {
+      "file": "negative-01-content-mutation.json",
+      "kind": "negative",
+      "expected": "FAIL",
+      "reason": "Core field (ts) mutated by 1 second, receipt_hash left as the ORIGINAL stated value. Recomputed hash no longer matches the stated hash.",
+      "all_checks_observed": { "hash_intact": false, "key_known": true, "signature_valid": true, "all_pass": false },
+      "exit_code_observed": 1
+    },
+    {
+      "file": "negative-02-digest-mutation.json",
+      "kind": "negative",
+      "expected": "FAIL",
+      "reason": "The stated receipt_hash itself has one hex character flipped; core fields untouched. Recompute no longer matches the (tampered) stated hash, AND the signature (computed over the original hash string) no longer verifies against the tampered string either.",
+      "all_checks_observed": { "hash_intact": false, "key_known": true, "signature_valid": false, "all_pass": false },
+      "exit_code_observed": 1
+    },
+    {
+      "file": "negative-03-signature-mutation.json",
+      "kind": "negative",
+      "expected": "FAIL",
+      "reason": "One base64 character of the signature flipped. Hash recomputation is unaffected (isolates the signature check specifically) but the Ed25519 signature no longer verifies.",
+      "all_checks_observed": { "hash_intact": true, "key_known": true, "signature_valid": false, "all_pass": false },
+      "exit_code_observed": 1
+    },
+    {
+      "file": "negative-04-wrong-signing-key.json",
+      "kind": "negative",
+      "expected": "FAIL",
+      "reason": "A forged-attribution attempt: the receipt_hash was genuinely signed, but by a freshly-generated, unrelated Ed25519 keypair -- while notary_fp still claims the REAL active fingerprint. Isolates the case where a signature is cryptographically valid over SOME key but not the key the receipt claims to be signed by.",
+      "all_checks_observed": { "hash_intact": true, "key_known": true, "signature_valid": false, "all_pass": false },
+      "exit_code_observed": 1
+    },
+    {
+      "file": "negative-05-chain-link-mismatch.json",
+      "kind": "negative",
+      "expected": "FAIL",
+      "reason": "prev_hash altered by one character. Because prev_hash is part of the hashed core preimage (not a separate soft-linked pointer), a tampered chain link is caught by hash_intact directly -- the chain is cryptographically bound into the digest itself, not just checked as a side condition.",
+      "all_checks_observed": { "hash_intact": false, "key_known": true, "signature_valid": true, "all_pass": false },
+      "exit_code_observed": 1
+    },
+    {
+      "file": "negative-06-unknown-key-version.json",
+      "kind": "negative",
+      "expected": "FAIL",
+      "reason": "notary_fp set to a fingerprint absent from BOTH the active and retired keyring entries -- simulates an unrecognized/future signing key or a foreign schema version. Must fail CLOSED (never treat an unknown key as trusted-by-default). Also fails hash_intact since notary_fp is itself part of the hashed core.",
+      "all_checks_observed": { "hash_intact": false, "key_known": false, "signature_valid": false, "all_pass": false },
+      "exit_code_observed": 1
+    }
+  ],
+  "conformance_rule": "A verifier that reports all_pass:true on ANY negative vector, OR all_pass:false on the positive vector, fails conformance. All 7 vectors above were executed against notary-x402-reference-kit/verify-offline-pinned.js on 2026-09-08 with zero network calls (network_calls_made:0 on every run) and produced exactly the expected/observed results shown -- this is a real run, not an assumed table."
+}

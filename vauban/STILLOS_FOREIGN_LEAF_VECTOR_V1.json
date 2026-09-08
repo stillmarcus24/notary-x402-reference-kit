@@ -1,0 +1,42 @@
+{
+  "_status": "PRE-INTEROPERABILITY LOCAL READINESS VECTOR. Not yet submitted to or accepted by Vauban. No StillOS digest has been anchored in a real Vauban v3 batch. This vector demonstrates local encoding correctness against Vauban's published spec; it is not a claim of interop.",
+  "vector_version": "stillos-vauban-foreign-leaf-v1",
+  "generated": "2026-09-08",
+  "vauban_spec_reference": {
+    "source": "x402-foundation/x402#3389 (comment by @seritalien, 2026-09-08T15:53:58Z) and vauban-org/x402-starknet docs/stark-receipt-profile-v0.1.md §4.1-4.2, re-fetched and cross-checked live during this pass -- byte-identical formula in both sources, no drift.",
+    "v3_root_preimage": "Poseidon(['VZKPAY_AGGROOT_V3', K, currency_id, subject_type, (subject, nullifier, amount) x K, F, (origin_tag, digest_lo, digest_hi) x F])",
+    "limb_encoding_rule": "For 256-bit digest D (big-endian integer): digest_lo = D mod 2^128, digest_hi = D >> 128. Mirrors Cairo's u256 {low, high}. Lossless -- both limbs together losslessly reconstruct D.",
+    "enc_for_unmasked_digest": "none"
+  },
+  "candidate_origin_tag": {
+    "value": "STILLOS_NOTARY_RECEIPT_V1",
+    "ascii_byte_length": 25,
+    "fits_31_byte_felt_packing": true,
+    "not_yet_accepted_by_vauban": true
+  },
+  "source_receipt": {
+    "identifier": "vectors/positive-01.json (this repository)",
+    "provenance": "Real live StillOS Notary production receipt (agent=stillos-foreseal-preflight-check), not a synthetic fixture.",
+    "receipt_hash_hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
+    "digest_algorithm": "SHA-256 (see ../docs/STILLOS_NOTARY_RECEIPT_V1.md for the full preimage/canonicalization spec)"
+  },
+  "foreign_leaf_encoding": {
+    "enc": "none",
+    "full_32_byte_digest_hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
+    "digest_D_as_big_endian_integer_decimal": "44974665768139634067708935534508377900557395446124172657459855177744187540790",
+    "digest_lo_decimal": "316796300310704499543803232519218414902",
+    "digest_hi_decimal": "132168663851421639234674382174282342923",
+    "digest_lo_hex": "0xee54bf83bd85759eadabf810230a4536",
+    "digest_hi_hex": "0x636ec23cec4628502312ddde24bc620b"
+  },
+  "independent_derivation": {
+    "tool": "encode-verify.js (this directory)",
+    "command": "node encode-verify.js 636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
+    "round_trip_decode_matches_input": true,
+    "cross_checked_division_vs_bitwise_shift": "both derivations of digest_hi (D / 2^128 and D >> 128) agree, computed independently in the same run"
+  },
+  "what_this_vector_does_and_does_not_prove": {
+    "proves": "The StillOS receipt_hash correctly and losslessly maps to Vauban's published v3 foreign-leaf digest_lo/digest_hi encoding, computed independently with no dependency on Vauban's own code.",
+    "does_not_prove": "That Vauban has agreed to the STILLOS_NOTARY_RECEIPT_V1 tag, that this specific digest has been included in any real v3 batch, that a StillOS receipt has ever been anchored on Starknet, or that Vauban's own implementation produces the identical limb split (this vector was not cross-verified against Vauban's own encoder -- only against their published formula)."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "agent": "stillos-foreseal-preflight-check",
+  "claim_sha256": "c4c75b22aacaedc106d8ee63e1189fd82b9fff61f980c14b1c6bb8fdaf8eb4eb",
+  "ts": "2026-09-06T17:20:11.994Z",
+  "prev_hash": "68d12125b03568f29f56afadb1f65da497546fb4114db94e8d9d7d39299994fe",
+  "notary_fp": "21de066900082465",
+  "resolver_hash": "0027fdef54e2a3e188b7227fc3c2c09017b33c8bcbad5f14972da963e2d046fb",
+  "receipt_hash": "636eca3cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
+  "signature": "vZdOtHbydTHqnV3052STMM44pc5qfNhVaNddOWOWImPkSbsAfrngsuyiaTeRcsUj09+NSs541tkzRJCZxgSeDw==",
+  "verify": "https://nolawealthfinancial.com/notary/verify?hash=636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
+  "attestation_type": "resolved_verdict",
+  "authoritative": true,
+  "proves": "This claim was resolved against an external ground-truth source (see resolver_type / settles_against in the sealed verdict object). The verdict, not the claim alone, is what carries evidentiary weight.",
+  "actor_class": "INTERNAL_SYSTEM",
+  "classification_reason": "source IP 49.13.49.149 is own infrastructure",
+  "confidence": "HIGH",
+  "source_ip_hash": "225955bb97ecbf7d"
+}
