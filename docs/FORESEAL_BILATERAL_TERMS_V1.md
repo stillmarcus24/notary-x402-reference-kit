@@ -1,26 +1,26 @@
 # StillOS × ForeSeal Interoperability Test — Bilateral Terms V1
 
-**Status: FROZEN TERMS, PRE-FUNDING. Bond currently UNFUNDED — nothing is requested from ForeSeal until the bond is funded and this document is re-published with a confirmed on-chain balance.**
+**Status: FROZEN TERMS, BOND FUNDED. Re-published 2026-09-09 with a confirmed on-chain balance: `active: true`, `onchain_balance_usd: 10.789999` against `bonded_usd: 10`. Custody moved to a 2-of-2 Safe in the same pass — see Wallets and the custody note in Precondition 1 below. That change is material to condition 1 and is stated here rather than left to be discovered.**
 
 This document restates, in full, the terms 0rkz/ForeSeal set on `x402-foundation/x402#2887` (2026-07-28) as preconditions to a bilateral test, and pins every value either side needs before funds move. It supersedes nothing informally agreed elsewhere — this file and the machine-readable `manifest/manifest.json` at `still-os-consciousness/docs/x402-2887/manifest/` (canonical JSON, SHA-256 `163dcbcc48be37cfa37466eff990d9ebcb313e26a573b25a054ad6ef1fa14bde` as of 2026-09-06) are the source of truth.
 
 - Terms version: `foreseal-stillos-interop-v1`
 - Originally drafted: 2026-09-06
 - Re-verified against live production: **2026-09-08** (this pass) — zero drift found, see `CURRENT_STATE_2026-09-08.md`
-- StillOS implementation commit (as of this re-verification): `10f2a2d9910338bd178c51d0063b34c0cdd1b198` (nested repo at `/home/marcus/core`) — one commit ahead of the 2026-09-06 pin (`b2efdea`); the intervening commit touched an unrelated file, confirmed zero change to any notary/dispute/bond/signing code (file checksums identical)
+- StillOS implementation commit (as of this re-publication): `38ad5fee0ef3171b3559232da67c88c0d00a00e4` (nested repo at `/home/marcus/core`) — two commits ahead of the 2026-09-08 pin (`10f2a2d9910338bd178c51d0063b34c0cdd1b198`). Both are confined to the bond path: the gas-floor check was relocated to the declared gas relayer (a Safe holds no ETH by design), and a `--record-external` path was added so a multisig payout can be verified on-chain and written into the hash-chained slash log. Zero change to notary, dispute, resolver or signing code.
 
 ## Parties
 
 | | Implementation | Identity |
 |---|---|---|
-| StillOS | Notary (`core/notary_service_marcus.cjs`) | commit `10f2a2d9...` |
+| StillOS | Notary (`core/notary_service_marcus.cjs`) | commit `38ad5fee...` |
 | ForeSeal | as identified publicly by @0rkz, `x402-foundation/x402#2887` | `github.com/0rkz/foreseal-x402-conformance` — commit not yet supplied by ForeSeal |
 
 ## Preconditions ForeSeal named (2026-07-28) — status of each
 
 | # | ForeSeal's condition | Status |
 |---|---|---|
-| 1 | Bond funded and `/notary/bond` reports active | **NOT MET.** `onchain_balance_usd: 0` vs `bonded_usd: 10`. See `READINESS_REPORT_V1.md` Gate F1 — funding transaction prepared, pending Marcus's explicit approval, not yet broadcast. |
+| 1 | Bond funded and `/notary/bond` reports active | **MET (2026-09-09).** `active: true`, `onchain_balance_usd: 10.789999` vs `bonded_usd: 10`, verified by direct `eth_call` to Base mainnet. **Material change disclosed with it:** collateral is held in a 2-of-2 Gnosis Safe, not the single-key EOA pinned in the prior revision. A slash payout therefore requires a human 2-of-2 signature and is not instant. The obligation to pay an adjudicated overturn is unchanged — custody governs who may move the collateral, not whether it is owed. If ForeSeal assesses multisig custody as material to this condition, it is theirs to re-open and this row reverts to NOT MET. |
 | 2 | Complete fee schedule for every lifecycle step, capped | **MET.** See `FEE_SCHEDULE_V1.md`. |
 | 3 | Signing keys pinned in public terms before funds move | **MET.** See `signing_identity` below and `keys/README.md`. |
 | 4 | Wallet addresses, claim text, dispute semantics, amounts, publication obligations fixed in writing | **MET** — all below. |
@@ -66,7 +66,7 @@ This document restates, in full, the terms 0rkz/ForeSeal set on `x402-foundation
 | Wallet | Address | Purpose |
 |---|---|---|
 | StillOS payTo (settlement + dispute fees) | `0xfAB07d26F7627fc4cE459ecf90d7E015F7eEcE71` | Receives x402 payments. Not the bond wallet. |
-| StillOS bond (collateral / slash source) | `0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf` | Independently verifiable via `USDC.balanceOf` on Base. |
+| StillOS bond (collateral / slash source) | `0x6243E363a3047173346Fa49C947Db204D4445634` | 2-of-2 Gnosis Safe on Base. Independently verifiable via `USDC.balanceOf`; owners and threshold are readable on-chain. Prior address `0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf` retired as collateral custody 2026-09-09 and now serves only as the gas relayer that lands payout transactions. |
 | ForeSeal | not yet supplied | — |
 
 ## Fees, exposure caps, hard stops
