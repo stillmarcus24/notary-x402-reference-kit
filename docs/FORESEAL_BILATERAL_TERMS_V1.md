@@ -7,13 +7,20 @@ This document restates, in full, the terms 0rkz/ForeSeal set on `x402-foundation
 - Terms version: `foreseal-stillos-interop-v1`
 - Originally drafted: 2026-09-06
 - Re-verified against live production: **2026-09-08** (this pass) — zero drift found, see `CURRENT_STATE_2026-09-08.md`
-- StillOS implementation commit (as of this re-publication): `38ad5fee0ef3171b3559232da67c88c0d00a00e4` (nested repo at `/home/marcus/core`) — two commits ahead of the 2026-09-08 pin (`10f2a2d9910338bd178c51d0063b34c0cdd1b198`). Both are confined to the bond path: the gas-floor check was relocated to the declared gas relayer (a Safe holds no ETH by design), and a `--record-external` path was added so a multisig payout can be verified on-chain and written into the hash-chained slash log. Zero change to notary, dispute, resolver or signing code.
+- StillOS implementation commit (as of this re-publication): `e63b3e97687d1f82e1540b5dc65cf42d48e12183` (nested repo at `/home/marcus/core`), superseding the `38ad5fee0ef3171b3559232da67c88c0d00a00e4` pin published earlier on 2026-09-09, which in turn superseded the 2026-09-08 pin `10f2a2d9910338bd178c51d0063b34c0cdd1b198`.
+
+  **This pin move is disclosed rather than made silently, and unlike the previous two it is NOT confined to the bond path — it changes notary response behaviour.** Two defects were found and fixed the same day, both in code ForeSeal would exercise during the bilateral test:
+
+  1. **The 402 payment challenge was advertising this bond as unfunded.** `TRUST_SUFFIX` — the bond sentence appended to every paid route's `description`, and therefore carried inside the 402 body ForeSeal receives at lifecycle step 1 — was computed once at process boot from a status cache that is empty at boot by design. The cold read always answers `inactive`, so every paid endpoint asserted "Correctness bond currently INACTIVE (unfunded)" for the life of the process, regardless of the real on-chain balance. **Condition 1 above was in fact satisfied while this endpoint said otherwise.** Fixed in `core/notary_bond.cjs`: each successful refresh is persisted and a cold process seeds from the last real on-chain observation, trusted only while under 6h old. With no recent observation it still answers inactive — the conservative direction is preserved. Verified live: `POST /dispute` now returns `Backed by a $10 on-chain correctness bond, up to $1 slashable per proven-wrong verdict`.
+  2. **An unpaid request for a paid resource returned 400 instead of 402.** A request with no `agent` field — including the bare `{}` probe an implementer or a directory crawler would send first — was rejected before reaching the payment challenge, so `accepts[]` was never served. Fixed at the single response chokepoint. Scope is deliberately narrow: only the missing-agent error converts, a caller who supplies `agent` and then sends a malformed body still receives an honest 400, and the two genuinely free endpoints (`/register-policy`, `/authorize`) still return 400 because a 402 there would be a new false claim. Verified live across all 27 paid endpoints.
+
+  **What did not change:** signing, hash-chaining, the resolver set, `/dispute` adjudication semantics, the fee schedule, and the claim/verdict record format are untouched by this commit. The frozen digest contract in `STILLOS_NOTARY_RECEIPT_V1.md` is unaffected, and the 1 positive + 6 negative vectors in `vectors/` still pass against `verify-offline-pinned.js` on this commit. ForeSeal should re-pin to `e63b3e9...` before running the test; if ForeSeal considers a change to 402 emission material to terms already frozen, that is theirs to re-open.
 
 ## Parties
 
 | | Implementation | Identity |
 |---|---|---|
-| StillOS | Notary (`core/notary_service_marcus.cjs`) | commit `38ad5fee...` |
+| StillOS | Notary (`core/notary_service_marcus.cjs`) | commit `e63b3e9...` |
 | ForeSeal | as identified publicly by @0rkz, `x402-foundation/x402#2887` | `github.com/0rkz/foreseal-x402-conformance` — commit not yet supplied by ForeSeal |
 
 ## Preconditions ForeSeal named (2026-07-28) — status of each
