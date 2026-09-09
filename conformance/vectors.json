@@ -1,0 +1,141 @@
+{
+  "suite": "x402-digest-triple-conformance",
+  "version": "1",
+  "generated": "2026-09-09",
+  "targets": [
+    "x402-foundation/x402#3389 — {alg, enc, hex} canonical digest triple",
+    "vauban-org/x402-starknet — v3 foreign-leaf (digest_lo, digest_hi), felt252 masking"
+  ],
+  "rules": {
+    "triple": "Every digest carried in a record is {alg, enc, hex}. `alg` names the digest function. `enc` names the storage encoding a verifier MUST apply before comparing. A record that omits `enc` is INVALID rather than defaulted (seritalien, x402#3389, 2026-09-08).",
+    "felt252_mask": "On Starknet a 256-bit digest is stored as a 251-bit field element: stored = D & ((1 << 251) - 1). A verifier that compares the FULL digest against the stored value reports a false negative on 31 of every 32 digests, because the top 5 bits are only all-zero 1 time in 32.",
+    "limbs": "Vauban v3 foreign leaf splits a 256-bit digest big-endian: digest_lo = D mod 2^128, digest_hi = D >> 128. Order is low-then-high."
+  },
+  "cases": [
+    {
+      "id": "triple-01-enc-none-roundtrip",
+      "intent": "positive",
+      "description": "Unmasked digest. enc:none means the hex IS the comparison value; limbs must round-trip losslessly.",
+      "input": {
+        "alg": "sha-256",
+        "enc": "none",
+        "hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536"
+      },
+      "provenance": "Real StillOS Notary production receipt, resolved_verdict, ledger line 2283, ts 2026-09-06T17:20:11.994Z. Not a synthetic fixture.",
+      "expect": {
+        "valid": true,
+        "digest_lo": "0xee54bf83bd85759eadabf810230a4536",
+        "digest_hi": "0x636ec23cec4628502312ddde24bc620b",
+        "roundtrip": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536"
+      }
+    },
+    {
+      "id": "triple-02-felt252-masked-changes-value",
+      "intent": "positive",
+      "description": "THE LOAD-BEARING CASE. Same digest stored as a felt252. Top 5 bits are 0b01100 (=12), so masking CHANGES the value. An implementation that ignores enc will compare the wrong bytes here.",
+      "input": {
+        "alg": "sha-256",
+        "enc": "felt252-masked-251",
+        "hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536"
+      },
+      "expect": {
+        "valid": true,
+        "top5bits": 12,
+        "masking_is_noop": false,
+        "stored": "0x36ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
+        "full_equals_stored": false,
+        "note": "A verifier comparing full == stored FAILS here. That failure is correct behaviour to detect, not a bug in the vector."
+      }
+    },
+    {
+      "id": "triple-03-felt252-masked-noop-1-in-32",
+      "intent": "positive",
+      "description": "The 1-in-32 digest whose top 5 bits are already zero, so masking is a no-op and a BROKEN verifier still passes. Included specifically so a suite cannot accidentally validate a broken implementation by testing only one digest.",
+      "input": {
+        "alg": "sha-256",
+        "enc": "felt252-masked-251",
+        "hex": "02a5fc9b5bea33b328a3dbda35059c9515f84ce8eb8d7021f94f0409904f696f"
+      },
+      "provenance": "sha256('stillos-conformance-probe-15'), found by search. Deterministic and independently reproducible.",
+      "expect": {
+        "valid": true,
+        "top5bits": 0,
+        "masking_is_noop": true,
+        "stored": "0x2a5fc9b5bea33b328a3dbda35059c9515f84ce8eb8d7021f94f0409904f696f",
+        "full_equals_stored": true,
+        "note": "Passing this case alone proves nothing. It must be run together with triple-02."
+      }
+    },
+    {
+      "id": "triple-04-missing-enc-is-invalid",
+      "intent": "negative",
+      "description": "A record omitting enc MUST be rejected, not defaulted to none. This is the explicit normative rule from x402#3389.",
+      "input": {
+        "alg": "sha-256",
+        "hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536"
+      },
+      "expect": {
+        "valid": false,
+        "error": "missing_enc"
+      }
+    },
+    {
+      "id": "triple-05-missing-alg-is-invalid",
+      "intent": "negative",
+      "description": "An unlabelled digest invites fake cross-ledger agreement — sha256 and keccak256 are indistinguishable by display. goun7/Tamga hit this in practice (x402#3389, 2026-09-07).",
+      "input": {
+        "enc": "none",
+        "hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536"
+      },
+      "expect": {
+        "valid": false,
+        "error": "missing_alg"
+      }
+    },
+    {
+      "id": "triple-06-unknown-enc-is-invalid",
+      "intent": "negative",
+      "description": "An unrecognised enc must fail closed rather than being treated as none.",
+      "input": {
+        "alg": "sha-256",
+        "enc": "felt252-masked-252",
+        "hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536"
+      },
+      "expect": {
+        "valid": false,
+        "error": "unknown_enc"
+      }
+    },
+    {
+      "id": "triple-07-short-hex-is-invalid",
+      "intent": "negative",
+      "description": "A 256-bit digest must be exactly 64 hex chars. Truncation must not be silently zero-padded.",
+      "input": {
+        "alg": "sha-256",
+        "enc": "none",
+        "hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a45"
+      },
+      "expect": {
+        "valid": false,
+        "error": "bad_hex_length"
+      }
+    },
+    {
+      "id": "tamga-01-chain-head-as-leaf",
+      "intent": "positive",
+      "description": "Tamga-shaped chain head: a plain SHA-256 over a deterministic JCS encoding, carried as enc:none, dropping into a batch leaf with no protocol surgery. Demonstrates the triple is implementation-neutral.",
+      "input": {
+        "alg": "sha-256",
+        "enc": "none",
+        "hex": "a4f1d3c9e8b27650f4a1c8d93e5b7206a9c4e1f8b3d67092c5a8e4b1f7d30926"
+      },
+      "provenance": "Shape only, per goun7's description in x402#3389. Not a real Tamga head — Tamga's own verified head does not exist yet (gated behind their #3379 pilot). Marked synthetic deliberately.",
+      "synthetic": true,
+      "expect": {
+        "valid": true,
+        "digest_lo": "0xa9c4e1f8b3d67092c5a8e4b1f7d30926",
+        "digest_hi": "0xa4f1d3c9e8b27650f4a1c8d93e5b7206"
+      }
+    }
+  ]
+}
