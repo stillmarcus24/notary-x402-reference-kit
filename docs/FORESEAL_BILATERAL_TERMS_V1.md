@@ -7,8 +7,10 @@ This document restates, in full, the terms 0rkz/ForeSeal set on `x402-foundation
 - Terms version: `foreseal-stillos-interop-v1`
 - Originally drafted: 2026-09-06
 - Re-verified against live production: **2026-09-08** (this pass) — zero drift found, see `CURRENT_STATE_2026-09-08.md`
-- **StillOS implementation pin: tag `foreseal-bilateral-v1` → `cd0c3f630f92be94bde61f7c3c6f3ddd51051239` in this repository.**
-  A tag, not a branch head, so it cannot drift.
+- **StillOS implementation pin: tag `foreseal-bilateral-v1` in this repository.**
+  A tag, not a branch head, so it cannot drift. The tag resolves to the commit that
+  contains both the published implementation and this corrected document; resolve the
+  tag rather than any SHA quoted in prose, which is how the previous four pins went stale.
 
   **Correction, 2026-09-10.** Every pin this document previously carried —
   `0ee96f44c758…`, `e63b3e97687d…`, `38ad5fee0ef3…` and the 2026-09-08 pin
