@@ -1,0 +1,185 @@
+{
+  "suite": "x402-evidence-record-conformance",
+  "version": "0.1.0",
+  "issue": "https://github.com/x402-foundation/x402/issues/2887",
+  "status": "PROPOSED — not adopted by any body. These are test vectors, not a specification.",
+  "note": "Two independent axes. INTEGRITY asks 'is this record intact and attributable' — it is answered by hashes and signatures alone and needs no knowledge of what was bought. SETTLEMENT asks 'does the money story match the delivery story' — it cannot be answered by cryptography at all, only by comparing two independently-sourced facts. Implementations tend to be strong on one axis and silently absent on the other, which is invisible until someone writes both down. The settled_not_delivered / delivered_not_settled / payee_mismatch cases were named by @StelarDigital on issue 2887; they are implemented here rather than waited for, and credited.",
+  "axes": {
+    "integrity": "record is intact, attributable to a known key, and chains to its predecessor",
+    "settlement": "the payment leg and the delivery leg agree with each other and with the quote"
+  },
+  "record_shape": {
+    "_comment": "Deliberately the INTERSECTION of what parties on 2887 can already emit, not a superset anyone must adopt. Unknown fields are ignored by the runner. Nothing here is StillOS-specific: there is no bond field, no verdict field, no resolver field. Adjudication and bonding are a PROFILE above this record, not part of it.",
+    "record_id": "string, opaque",
+    "prev_record_hash": "string|null, hash of the predecessor record, null for chain head",
+    "record_hash": "string, hash over the canonical record minus signature",
+    "signer_key_id": "string, key fingerprint or version identifier",
+    "signature": "string",
+    "request_digest": "string|null, fingerprint of what was asked for",
+    "response_digest": "string|null, fingerprint of what was delivered",
+    "payment": {
+      "_comment": "null when the record makes no payment claim",
+      "reference": "string, settlement identifier (tx hash, authorization id)",
+      "payer": "string",
+      "payee": "string",
+      "asset": "string",
+      "amount": "string, integer minor units as a string to avoid float error"
+    },
+    "quote": {
+      "_comment": "what was advertised BEFORE payment; the thing settlement is checked against",
+      "payee": "string",
+      "asset": "string",
+      "amount": "string"
+    },
+    "delivery": {
+      "_comment": "null when nothing was delivered or delivery is unknown to the recorder",
+      "delivered": "boolean",
+      "response_digest": "string"
+    },
+    "authority": {
+      "_comment": "optional; present when the record asserts it acted under a delegated mandate",
+      "evidence_digest": "string",
+      "subject": "string"
+    },
+    "source_available": "boolean, whether the external source of record could be reached at evaluation time"
+  },
+  "settlement_status_values": [
+    "OK",
+    "SETTLED_NOT_DELIVERED",
+    "DELIVERED_NOT_SETTLED",
+    "PAYEE_MISMATCH",
+    "AMOUNT_MISMATCH",
+    "AUTHORITY_MISMATCH",
+    "OVERTURNED_AFTER_VALID_SETTLEMENT",
+    "INDETERMINATE"
+  ],
+  "cases": [
+    {
+      "id": "rec-01",
+      "axis": "integrity",
+      "description": "Positive control. Intact record, known key, valid chain link, payment matches quote, delivery present.",
+      "why": "A suite with no positive control cannot distinguish a correct implementation from one that rejects everything. Every negative case below is a single-field mutation of THIS record, so a failure localises to one cause.",
+      "input": {
+        "record_id": "r-0001",
+        "prev_record_hash": "aa00000000000000000000000000000000000000000000000000000000000001",
+        "record_hash": "b1c2d300000000000000000000000000000000000000000000000000000000ff",
+        "signer_key_id": "21de066900082465",
+        "signature": "SIG-VALID",
+        "request_digest": "req0000000000000000000000000000000000000000000000000000000000001",
+        "response_digest": "res0000000000000000000000000000000000000000000000000000000000001",
+        "payment": { "reference": "0xtx01", "payer": "0xPAYER", "payee": "0xPAYEE", "asset": "USDC", "amount": "50000" },
+        "quote": { "payee": "0xPAYEE", "asset": "USDC", "amount": "50000" },
+        "delivery": { "delivered": true, "response_digest": "res0000000000000000000000000000000000000000000000000000000000001" },
+        "source_available": true
+      },
+      "expect": { "integrity_valid": true, "settlement_status": "OK" }
+    },
+    {
+      "id": "rec-02",
+      "axis": "integrity",
+      "description": "Content mutation. The request_digest was altered after signing; record_hash no longer covers the content.",
+      "why": "The cheapest possible attack and the one every implementation claims to catch.",
+      "mutate": { "field": "request_digest", "to": "req000000000000000000000000000000000000000000000000000000000dead" },
+      "expect": { "integrity_valid": false, "integrity_error": "content_mutated" }
+    },
+    {
+      "id": "rec-03",
+      "axis": "integrity",
+      "description": "Digest mutation. record_hash itself was rewritten to match altered content, but the signature still commits to the original.",
+      "why": "Distinguishes an implementation that recomputes the hash from one that merely reads the hash field and trusts it.",
+      "mutate": { "field": "record_hash", "to": "0000000000000000000000000000000000000000000000000000000000000bad" },
+      "expect": { "integrity_valid": false, "integrity_error": "digest_mismatch" }
+    },
+    {
+      "id": "rec-04",
+      "axis": "integrity",
+      "description": "Signature mutation. Record intact, signature bytes corrupted.",
+      "why": "Separates hash checking from signature checking. An implementation can pass rec-02 and rec-03 by hashing alone and still never verify a signature.",
+      "mutate": { "field": "signature", "to": "SIG-CORRUPT" },
+      "expect": { "integrity_valid": false, "integrity_error": "signature_invalid" }
+    },
+    {
+      "id": "rec-05",
+      "axis": "integrity",
+      "description": "Wrong signing key. Valid signature, but produced by a key that is not the one claimed.",
+      "why": "A signature that verifies against SOME key is not a signature that verifies against the RIGHT key. This is the single most common real-world verifier bug.",
+      "mutate": { "field": "signature", "to": "SIG-VALID-WRONGKEY" },
+      "expect": { "integrity_valid": false, "integrity_error": "wrong_key" }
+    },
+    {
+      "id": "rec-06",
+      "axis": "integrity",
+      "description": "Chain-link mismatch. prev_record_hash does not match the hash of the record that actually precedes it.",
+      "why": "Per-record validity does not imply ledger validity. An implementation that verifies records individually will pass every case above and still accept a forked or spliced history.",
+      "mutate": { "field": "prev_record_hash", "to": "cc00000000000000000000000000000000000000000000000000000000000999" },
+      "expect": { "integrity_valid": false, "integrity_error": "chain_link_mismatch" }
+    },
+    {
+      "id": "rec-07",
+      "axis": "integrity",
+      "description": "Unknown key version. Signature is well-formed but signer_key_id is not in the known keyring.",
+      "why": "Keys rotate. A verifier must resolve the key the record NAMES, not the key that happens to be current. Verifiers that read a live /health endpoint at verify time fail this the day after a rotation, retroactively invalidating correct historical records.",
+      "mutate": { "field": "signer_key_id", "to": "ffffffffffffffff" },
+      "expect": { "integrity_valid": false, "integrity_error": "unknown_key" }
+    },
+    {
+      "id": "rec-08",
+      "axis": "settlement",
+      "credit": "@StelarDigital, x402#2887",
+      "description": "Settled but not delivered. Payment landed; nothing was delivered.",
+      "why": "The buyer's loss case. Cryptography cannot detect this — every field is intact and correctly signed. It is only visible by comparing the payment leg against an independently-sourced delivery leg, which is precisely why an integrity-only implementation reports this record as perfectly valid.",
+      "mutate": { "field": "delivery", "to": { "delivered": false, "response_digest": null } },
+      "expect": { "integrity_valid": true, "settlement_status": "SETTLED_NOT_DELIVERED" }
+    },
+    {
+      "id": "rec-09",
+      "axis": "settlement",
+      "credit": "@StelarDigital, x402#2887",
+      "description": "Delivered but not settled. Goods went out; no payment reference exists.",
+      "why": "The seller's loss case, and the one most likely to be silently tolerated because the record still looks generous rather than fraudulent.",
+      "mutate": { "field": "payment", "to": null },
+      "expect": { "integrity_valid": true, "settlement_status": "DELIVERED_NOT_SETTLED" }
+    },
+    {
+      "id": "rec-10",
+      "axis": "settlement",
+      "credit": "@StelarDigital, x402#2887",
+      "description": "Payee mismatch. Payment settled to an address other than the one quoted.",
+      "why": "A correctly signed, fully intact receipt for money that went to the wrong party. This is the payment-redirect attack, and an integrity-only verifier signs off on it.",
+      "mutate": { "field": "payment.payee", "to": "0xATTACKER" },
+      "expect": { "integrity_valid": true, "settlement_status": "PAYEE_MISMATCH" }
+    },
+    {
+      "id": "rec-11",
+      "axis": "settlement",
+      "description": "Amount mismatch. Settled amount is lower than the quoted amount.",
+      "why": "Not named on 2887. Underpayment is the quiet sibling of payee mismatch: the money reaches the right party, so address checks pass, but the quote was not honoured. Amounts are carried as integer-minor-unit STRINGS in this suite specifically so an implementation cannot paper over this with float comparison.",
+      "mutate": { "field": "payment.amount", "to": "1" },
+      "expect": { "integrity_valid": true, "settlement_status": "AMOUNT_MISMATCH" }
+    },
+    {
+      "id": "rec-12",
+      "axis": "settlement",
+      "description": "Authority mismatch. The record asserts a delegated mandate whose evidence digest does not match the subject that acted.",
+      "why": "Not named on 2887. Relevant to the ERC-8004 / delegated-agent direction: an agent can hold a perfectly valid receipt for an action it had no mandate to take. Integrity and settlement can both be clean while authority is not.",
+      "mutate": { "field": "authority", "to": { "evidence_digest": "auth00000000000000000000000000000000000000000000000000000000bad", "subject": "0xNOT_THE_ACTOR" } },
+      "expect": { "integrity_valid": true, "settlement_status": "AUTHORITY_MISMATCH" }
+    },
+    {
+      "id": "rec-13",
+      "axis": "settlement",
+      "description": "Source unavailable. The external source of record could not be reached at evaluation time.",
+      "why": "Not named on 2887, and the most dangerous omission in the set. An unreachable source is NOT a refutation. Implementations that collapse unknown into false will overturn correct records during someone else's outage — and because the failure is transient, it never reproduces afterwards. INDETERMINATE must be a distinct terminal value and the case must be retryable.",
+      "mutate": { "field": "source_available", "to": false },
+      "expect": { "integrity_valid": true, "settlement_status": "INDETERMINATE", "must_not_be": "SETTLED_NOT_DELIVERED" }
+    },
+    {
+      "id": "rec-14",
+      "axis": "settlement",
+      "description": "Verdict overturned after a valid settlement. Payment and delivery were both correct at the time; the underlying claim was subsequently proven wrong.",
+      "why": "Not named on 2887. Tests whether a record format can express a debt that arises AFTER a transaction closed cleanly. A format with no way to say 'this settled correctly and is now owed back' forces the obligation to live outside the evidence trail, where nobody can audit it.",
+      "mutate": { "field": "overturned", "to": { "overturned": true, "overturn_record_hash": "ov00000000000000000000000000000000000000000000000000000000000001" } },
+      "expect": { "integrity_valid": true, "settlement_status": "OVERTURNED_AFTER_VALID_SETTLEMENT" }
+    }
+  ]
+}

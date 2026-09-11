@@ -1,4 +1,113 @@
-# x402 digest-triple conformance suite
+# x402 conformance suites
+
+Two runnable suites for the open questions on
+[x402#2887](https://github.com/x402-foundation/x402/issues/2887) (evidence record) and
+[x402#3389](https://github.com/x402-foundation/x402/issues/3389) (digest triple).
+
+**Zero dependencies. Node stdlib only. No network at run time. No account. No callback to us.**
+
+```sh
+node run-all.js                                        # both suites, bundled reference
+node run-all.js --record-adapter ./stillos_adapter.js  # both suites, StillOS's real implementation
+node run-record.js --adapter ./mine.js --verbose       # score yours
+```
+
+Exit `0` iff every assertion behaved as specified.
+
+## Scoreboard
+
+| implementation | digest triple | evidence record | integrity | settlement |
+|---|---|---|---|---|
+| bundled reference | 8/8 | **22/22** | 14/14 | 8/8 |
+| **StillOS notary (ours)** | 8/8 | **16/22** | 14/14 | **2/8** |
+| integrity-only strawman | — | 15/22 | 14/14 | 1/8 |
+
+**We wrote the suite and we do not pass it.** `stillos_adapter.js` is our real
+implementation, not a demo, and it returns `UNSUPPORTED` on six cases rather than
+guessing a plausible answer. Reproduce with
+`node run-record.js --adapter ./stillos_adapter.js`.
+
+What we fail, and why, in our own words:
+
+| case | we return | because |
+|---|---|---|
+| `rec-08` settled-not-delivered | `UNSUPPORTED` | no delivery primitive — nothing binds a delivered artifact to a settlement |
+| `rec-09` delivered-not-settled | `UNSUPPORTED` | same gap, other direction |
+| `rec-10` payee mismatch | `UNSUPPORTED` | the receipt does not carry the quote, so settled payee can't be compared to advertised payee |
+| `rec-11` amount mismatch | `UNSUPPORTED` | same — underpayment is invisible to us |
+| `rec-12` authority mismatch | `UNSUPPORTED` | our authority verifier is a separate kit; its digest isn't bound into the record |
+| `rec-01` clean exchange | `UNSUPPORTED` | we cannot even confirm a *good* settlement, for the same reason as `rec-10` |
+
+## Suite 1 — evidence record (`run-record.js`, x402#2887)
+
+14 cases, 22 assertions, across **two independent axes**:
+
+- **Integrity** — is this record intact and attributable? Answered by hashes and
+  signatures alone. Needs no knowledge of what was bought.
+- **Settlement** — does the money story match the delivery story? **Cannot be
+  answered by cryptography at all.** It requires comparing two independently-sourced
+  facts.
+
+That split is the entire point. Implementations tend to be strong on one axis and
+silently absent on the other, and the gap is invisible until both are written down
+side by side. Every settlement case below is a record that is *cryptographically
+perfect* — correctly hashed, correctly signed, correctly chained — and still wrong.
+
+`rec-08`, `rec-09` and `rec-10` were named by **@StelarDigital on x402#2887**.
+They are implemented here rather than waited for, and credited in the vector file.
+`rec-11`–`rec-14` have not been raised by anyone on the thread yet:
+
+- `rec-11` **amount mismatch** — money reaches the right party, but not the quoted
+  amount. Amounts are integer minor units carried as **strings** so no implementation
+  can paper over this with float comparison.
+- `rec-12` **authority mismatch** — a valid receipt for an action the agent had no
+  mandate to take. Relevant to the ERC-8004 direction.
+- `rec-13` **source unavailable → `INDETERMINATE`, never false.** The most dangerous
+  omission in the set. An implementation that collapses *unknown* into *false* will
+  overturn correct records during someone else's outage, and because the failure is
+  transient it never reproduces afterwards. The runner fails this case specially if
+  you return a refutation.
+- `rec-14` **overturned after a valid settlement** — can the format express a debt
+  that arises *after* a transaction closed cleanly? A format that can't forces the
+  obligation to live outside the evidence trail where nobody can audit it.
+
+### This is not a specification
+
+These are **test vectors, not a standard**, and nothing here is adopted by any body.
+The record shape in `record-vectors.json` is deliberately the *intersection* of what
+parties on 2887 can already emit — not a superset anyone must adopt. There is no bond
+field, no verdict field, no resolver field. **We are explicitly not proposing the
+StillOS schema as the common record.** Adjudication and bonding belong in a profile
+*above* this record; that profile is at tag `foreseal-bilateral-v1.1` and is not part
+of these vectors.
+
+### Signatures are symbolic, deliberately
+
+The signature field carries `SIG-VALID` / `SIG-CORRUPT` / `SIG-VALID-WRONGKEY` rather
+than real bytes. Parties on 2887 sign with Ed25519, secp256k1 and STARK-native hashes;
+shipping real signature bytes would mean shipping *our* curve and turning a neutral
+suite into an adoption vehicle for one implementation. The suite tests verifier
+**logic** — do you distinguish intact from corrupt, and right-key from wrong-key, and
+do you recompute rather than trust the stated hash? Wiring your real crypto behind
+those three tokens is a few lines in your adapter. The settlement axis needs no such
+caveat: it is comparison over two facts and is identical for everyone.
+
+### Writing an adapter
+
+```js
+module.exports = {
+  NAME: 'my implementation',
+  verifyRecord(record, ctx) { return { valid: true }; },              // ctx = { knownKeys, expectedPrevHash }
+  settlementCheck(record)   { return { status: 'OK' }; },             // see settlement_status_values
+};
+```
+
+Corrections to the vectors are more useful to us than agreement with them. If a case
+encodes a wrong expectation, open an issue and we will change it.
+
+---
+
+## Suite 2 — digest triple (`run.js`, x402#3389)
 
 Runnable vectors for the `{alg, enc, hex}` digest triple and the Starknet felt252
 masking rule discussed in [x402-foundation/x402#3389](https://github.com/x402-foundation/x402/issues/3389).
