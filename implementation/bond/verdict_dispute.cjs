@@ -24,6 +24,8 @@ const crypto = require('crypto');
 const signer = require('/home/marcus/core/notary_recovery_signer.cjs');
 const resolvers = require('/home/marcus/still-os-consciousness/core/general_resolvers.cjs');
 const reputation = require('/home/marcus/still-os-consciousness/core/reputation_layer.cjs');
+const obligations = require('/home/marcus/core/slash_obligations.cjs');
+const bondCfg = require('/home/marcus/core/notary_bond.cjs');
 
 const DIR = '/home/marcus/still-os-consciousness/state/proof-notary';
 const LEDGER = path.join(DIR, 'receipts.jsonl');
@@ -85,7 +87,7 @@ function findReceipt(hash) {
  * (rejection is itself a real, signed outcome — a bad-faith dispute doesn't
  * just vanish, it's recorded as REJECTED so pattern-of-abuse is visible later).
  */
-async function fileDispute({ verdict_receipt_hash, verdict_object, original_resolver_spec, agent, reason }) {
+async function fileDispute({ verdict_receipt_hash, verdict_object, original_resolver_spec, agent, reason, disputant_wallet }) {
   if (!verdict_receipt_hash || !verdict_object || !original_resolver_spec || !agent) {
     return { ok: false, error: 'requires {verdict_receipt_hash, verdict_object, original_resolver_spec, agent, reason}' };
   }
@@ -176,6 +178,14 @@ async function fileDispute({ verdict_receipt_hash, verdict_object, original_reso
     fresh_verdict: freshVerdict, fresh_outcome: fresh.outcome, fresh_status: fresh.status,
     fresh_observed: fresh.observed,
     upheld,
+    // 2026-09-11: this field was read by buildSlashDirective() but never written by
+    // anything, so it was permanently null and every upheld dispute emitted a
+    // placeholder "<disputant_payout_0x>" instead of a real payout address. It is
+    // now carried from the request. Optional and validated, not trusted: a bad or
+    // absent value degrades to null and the obligation records "wallet not supplied"
+    // rather than inventing one.
+    disputant_wallet: (typeof disputant_wallet === 'string' && /^0x[a-fA-F0-9]{40}$/.test(disputant_wallet))
+      ? disputant_wallet : null,
     resolved_at: new Date().toISOString(),
   };
   let receipt;
@@ -192,7 +202,33 @@ async function fileDispute({ verdict_receipt_hash, verdict_object, original_reso
   // Reputation impact: only overturned disputes are worth recording against the
   // resolver_type's track record — a rejected dispute doesn't discredit anything.
   let slash_directive = null;
+  let obligation = null;
   if (upheld) {
+    // DURABLE OBLIGATION FIRST (2026-09-11). Everything below this point is
+    // best-effort: the reputation write is in a swallowed try/catch, and the founder
+    // alert inside buildSlashDirective() is too. Under the 2-of-2 Safe custody
+    // adopted 2026-09-09 the payout also cannot complete inside this request. So if
+    // the debt is not written down HERE — synchronously, before any of that — an
+    // upheld dispute can leave no inspectable trace that money is owed. That was the
+    // real gap behind @0rkz's question on x402#2887 about what happens to a claim
+    // while it waits for the second signature.
+    //
+    // This is intentionally NOT wrapped in a try/catch. If the obligation cannot be
+    // recorded, the correct behaviour is to fail loudly and let the caller retry,
+    // not to return a successful-looking overturn with no record of the debt.
+    const cfg = bondCfg.loadConfig();
+    obligation = obligations.openObligation({
+      verdict_receipt_hash,
+      dispute_receipt_hash: receipt.receipt_hash || receipt.hash,
+      disputant: disputeObj.disputant_wallet,
+      amount_usd: cfg.per_verdict_max_usd,
+      custody_type: cfg.custody_type || 'single-key-eoa',
+      bond_wallet: cfg.wallet,
+      asset_contract: cfg.asset_contract,
+      network: cfg.network,
+      reason: `verdict overturned on dispute ${receipt.receipt_hash || receipt.hash}`,
+    });
+
     try {
       reputation.recordVerdict({
         agent, verdict: 'OVERTURNED_ON_DISPUTE', resolver_type: original_resolver_spec.type,
@@ -208,37 +244,63 @@ async function fileDispute({ verdict_receipt_hash, verdict_object, original_reso
     // So we do everything a human otherwise would: name the disputant payout wallet,
     // validate the slash in DRY-RUN, and alert with the exact --execute command.
     // The only remaining human step is authorizing the on-chain payout.
-    slash_directive = buildSlashDirective({ verdict_receipt_hash, disputeObj, receipt });
+    slash_directive = buildSlashDirective({ verdict_receipt_hash, disputeObj, receipt, obligation });
   }
 
-  return { ok: true, upheld, receipt, disputeObj, slash_directive };
+  return { ok: true, upheld, receipt, disputeObj, slash_directive, obligation };
 }
 
 // Assemble (and dry-run-validate) the slash that an upheld dispute earns. Fires a
 // founder alert carrying the exact governed --execute command. Never pays: the
 // payout stays behind notary_bond_slash.cjs --execute (the approval line).
-function buildSlashDirective({ verdict_receipt_hash, disputeObj, receipt }) {
+function buildSlashDirective({ verdict_receipt_hash, disputeObj, receipt, obligation }) {
   const overturn_hash = receipt && (receipt.receipt_hash || receipt.hash);
   const disputant_wallet = (disputeObj && disputeObj.disputant_wallet) || null;
-  const cmd = disputant_wallet
-    ? `node core/notary_bond_slash.cjs --receipt ${verdict_receipt_hash} --disputant ${disputant_wallet} --overturned ${overturn_hash} --reason ${JSON.stringify('overturned on dispute ' + overturn_hash)} --execute`
-    : `node core/notary_bond_slash.cjs --receipt ${verdict_receipt_hash} --disputant <disputant_payout_0x> --overturned ${overturn_hash} --reason "overturned on dispute" --execute`;
-  const directive = { verdict_receipt_hash, overturn_hash, disputant_wallet, execute_cmd: cmd,
-    note: 'DRY-RUN only. On-chain payout requires the --execute command above (money-out approval line).' };
+  const wallet_arg = disputant_wallet || '<disputant_payout_0x>';
+  const custody = (obligation && obligation.custody_type) || 'single-key-eoa';
+
+  // The emitted command must match real custody. Under the 2-of-2 Safe adopted
+  // 2026-09-09, `--execute` REFUSES by design (notary_bond_slash.cjs checks
+  // custody_type before touching a key), so emitting it here would hand the founder
+  // a command that cannot work and describe a payout path that does not exist.
+  const multisig = custody !== 'single-key-eoa';
+  const execute_cmd = multisig
+    ? `# 1. Sign 2-of-2 from Safe ${obligation && obligation.bond_wallet}: transfer ${obligation && obligation.amount_usd} USDC to ${wallet_arg}\n` +
+      `#    calldata: ${(obligation && obligation.payout_calldata) || '<disputant wallet not supplied>'}\n` +
+      `# 2. node core/notary_bond_slash.cjs --record-external --receipt ${verdict_receipt_hash} ` +
+      `--disputant ${wallet_arg} --amount ${obligation && obligation.amount_usd} --tx <payout_tx_hash>`
+    : `node core/notary_bond_slash.cjs --receipt ${verdict_receipt_hash} --disputant ${wallet_arg} ` +
+      `--overturned ${overturn_hash} --reason ${JSON.stringify('overturned on dispute ' + overturn_hash)} --execute`;
+
+  const directive = {
+    verdict_receipt_hash, overturn_hash, disputant_wallet, custody_type: custody,
+    obligation_id: obligation && obligation.obligation_id,
+    obligation_state: obligation && obligation.state,
+    amount_usd: obligation && obligation.amount_usd,
+    payout_requires_human_multisig_signature: multisig,
+    execute_cmd,
+    note: multisig
+      ? 'The debt is recorded and inspectable independently of this directive (see obligation_id). '
+        + 'Payout requires a human 2-of-2 Safe signature and has NO committed deadline — see the '
+        + 'custody classification in the bilateral terms. Recording the discharge is a separate '
+        + 'command that verifies the transfer on-chain before it will write.'
+      : 'DRY-RUN only. On-chain payout requires the --execute command above (money-out approval line).',
+  };
   try {
     require('/home/marcus/core/notify.cjs').notify({
       type: 'BOND_SLASH_EARNED',
-      subject: `⚖️ Dispute upheld — bond slash EARNED on ${verdict_receipt_hash.slice(0, 12)}…`,
+      subject: `⚖️ Dispute upheld — bond slash OWED on ${verdict_receipt_hash.slice(0, 12)}…`,
       lines: [
         `A StillOS verdict was overturned on independent re-run. The correctness bond is now owed to the disputant.`,
+        `Obligation: ${obligation && obligation.obligation_id} (state ${obligation && obligation.state}, recorded durably)`,
         `Overturned verdict: ${verdict_receipt_hash}`,
         `Dispute receipt: ${overturn_hash}`,
-        disputant_wallet ? `Disputant wallet: ${disputant_wallet}` : `Disputant wallet: NOT on file — supply the 0x payout address.`,
-        `Consequence fires automatically to the money-out line. To pay, run:`,
-        cmd,
+        disputant_wallet ? `Disputant wallet: ${disputant_wallet}` : `Disputant wallet: NOT supplied — obtain the 0x payout address.`,
+        multisig ? `Custody: ${custody} — payout needs a 2-of-2 signature. To pay and record:` : `To pay, run:`,
+        execute_cmd,
       ],
     });
-  } catch (e) { /* alert best-effort — the directive is still returned to the caller */ }
+  } catch (e) { /* alert best-effort — the obligation is already durable, unlike before */ }
   return directive;
 }
 

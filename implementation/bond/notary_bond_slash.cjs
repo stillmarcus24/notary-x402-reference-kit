@@ -27,6 +27,7 @@ const { createWalletClient, http: viemHttp, publicActions, encodeFunctionData } 
 const { privateKeyToAccount } = require(NM + '/viem/accounts');
 const { base } = require(NM + '/viem/chains');
 const bond = require('/home/marcus/core/notary_bond.cjs');
+const obligations = require('/home/marcus/core/slash_obligations.cjs');
 
 const RPC = process.env.BASE_RPC || 'https://mainnet.base.org';
 const ERC20_TRANSFER_ABI = [{ name: 'transfer', type: 'function', stateMutability: 'nonpayable',
@@ -106,7 +107,12 @@ async function main() {
     if (!moved) fail(`tx ${tx} contains no USDC Transfer of ${amount} from bond wallet ${cfg.wallet} to ${disputant} — refusing to record`);
 
     const rec = bond.recordSlash({ receipt_hash, disputant, amount_usd: amount, payout_tx: tx, reason });
-    console.log(JSON.stringify({ mode: 'RECORDED-EXTERNAL (multisig payout verified on-chain, no money moved by this command)', entry: rec }, null, 2));
+    // Discharge the durable obligation opened at adjudication time. Only reached
+    // after the on-chain Transfer above was verified, so PAID never gets written
+    // for a payout that did not actually happen.
+    const dis = obligations.markPaidByReceipt(receipt_hash, tx);
+    console.log(JSON.stringify({ mode: 'RECORDED-EXTERNAL (multisig payout verified on-chain, no money moved by this command)',
+      entry: rec, obligation: dis || 'no open obligation found for this receipt' }, null, 2));
     return;
   }
   if (!receipt_hash) fail('--receipt <verdict_receipt_hash> required');
@@ -158,6 +164,7 @@ async function main() {
   if (rcpt.status !== 'success') fail(`payout tx reverted: ${hash}`);
 
   const entry = bond.recordSlash({ receipt_hash, disputant, amount_usd: amount, payout_tx: hash, reason });
+  const discharged = obligations.markPaidByReceipt(receipt_hash, hash);
   try {
     require('/home/marcus/core/notify.cjs').notify({
       type: 'BOND_SLASH_EXECUTED',
@@ -167,7 +174,9 @@ async function main() {
         `Payout tx: ${hash}`, `Overturn ref: ${overturned}`, `Bond remaining: $${bond.availableBondUsd(cfg)}`],
     });
   } catch (e) { console.error('[slash] alert failed (payout still landed):', e.message); }
-  console.log(JSON.stringify({ mode: 'EXECUTED', payout_tx: hash, slash_entry: entry, bond_remaining_usd: bond.availableBondUsd(cfg) }, null, 2));
+  console.log(JSON.stringify({ mode: 'EXECUTED', payout_tx: hash, slash_entry: entry,
+    obligation: discharged || 'no open obligation found for this receipt',
+    bond_remaining_usd: bond.availableBondUsd(cfg) }, null, 2));
 }
 
 main().catch(e => { console.error('ERR:', e.message); process.exit(1); });

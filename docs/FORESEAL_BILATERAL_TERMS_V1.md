@@ -1,3 +1,22 @@
+> **SUPERSEDED 2026-09-11 by [`FORESEAL_BILATERAL_TERMS_V1_1.md`](FORESEAL_BILATERAL_TERMS_V1_1.md).**
+>
+> This file is retained **verbatim below this banner** as the historical record of what
+> tag `foreseal-bilateral-v1` (`c68e06aa2d690c24f0e271d5b714aac25482cb11`) actually said.
+> It has not been rewritten, and that tag has not been moved. Read it to audit what was
+> wrong; do not treat it as current terms.
+>
+> Known defects in the text below, corrected in V1.1 and itemised in
+> [`SUPERSESSION.json`](../SUPERSESSION.json):
+> **(a)** it attributes to ForeSeal a bilateral agreement that a REJECTED outcome is a
+> successful test — ForeSeal agreed to no such thing, and the attribution is withdrawn;
+> **(b)** it claims the tag "cannot drift" — this repository has no tag protection;
+> **(c)** its Parties table says the tag resolves to `cd0c3f630f92…` — it resolves to
+> `c68e06aa2d69…`; **(d)** it cites the retired domain `nolawealthfinancial.com` for the
+> keyring endpoint; **(e)** the canonical manifest it points to still carried a retired
+> bond wallet, an unfunded $0 bond, an unfetchable local commit, and no custody model.
+
+---
+
 # StillOS × ForeSeal Interoperability Test — Bilateral Terms V1
 
 **Status: FROZEN TERMS, BOND FUNDED. Re-published 2026-09-09 with a confirmed on-chain balance: `active: true`, `onchain_balance_usd: 10.789999` against `bonded_usd: 10`. Custody moved to a 2-of-2 Safe in the same pass — see Wallets and the custody note in Precondition 1 below. That change is material to condition 1 and is stated here rather than left to be discovered.**

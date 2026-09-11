@@ -74,14 +74,19 @@ Real work-in-progress toward two external interoperability exercises discussed o
 - **`docs/CURRENT_STATE_2026-09-08.md`** — a from-scratch re-audit of every claim below against live production and Base mainnet, PASS/FAIL/PARTIAL with evidence for each line.
 - **`docs/STILLOS_NOTARY_RECEIPT_V1.md`** — the frozen digest contract: exact preimage, field order, canonicalization, and a signature gotcha worth knowing before you re-implement this.
 - **`docs/FEE_SCHEDULE_V1.md`** — every paid step, capped, both sides.
-- **`docs/FORESEAL_BILATERAL_TERMS_V1.md`** + **`manifest/`** — the frozen bilateral test terms with ForeSeal (@0rkz), restating their own stated preconditions and mapping each to its current status.
+- **`docs/FORESEAL_BILATERAL_TERMS_V1_1.md`** + **`manifest/manifest.json`** — the frozen bilateral test terms with ForeSeal (@0rkz), restating their own stated preconditions and mapping each to its current status. `manifest.json` is **canonical**; the prose is checked against it. Release tag `foreseal-bilateral-v1.1` — resolve the tag, record the SHA; the repo has no tag protection, so the tag is a label and the commit is the object.
+  - **`SUPERSESSION.json`** — what V1 got wrong and how, itemised. V1 (`c68e06aa2d690c24f0e271d5b714aac25482cb11`) is **not moved and not rewritten**; `docs/FORESEAL_BILATERAL_TERMS_V1.md` is retained verbatim under a supersession banner.
+  - **`implementation/bond/`** — the bond, dispute, slash and obligation-ledger code a counterparty needs to assess whether 2-of-2 custody is material.
+  - **`tools/check-consistency.cjs`** (86 assertions) and **`tools/test-slash-obligations.cjs`** (34 transitions) — both runnable with no StillOS box.
 - **`keys/`** — the signing key(s), pinned as static files, zero HTTP required to trust them.
 - **`verify-offline-pinned.js`** — a true offline verifier: zero network calls, Node stdlib only (`crypto`, `fs`), deterministic exit code.
 - **`vectors/`** — one real positive receipt + six adversarial negative vectors (content mutation, digest mutation, signature mutation, wrong signing key, chain-link mismatch, unknown key/version), each with its actual observed verifier output in `vectors/MANIFEST.json`.
 - **`vauban/`** — a local compatibility vector mapping a real StillOS receipt digest to Vauban's v3 foreign-leaf `digest_lo`/`digest_hi` encoding (`x402-foundation/x402#3389`). Explicitly labeled pre-interoperability — no claim of Vauban acceptance is made anywhere in this repo.
 - **`docs/READINESS_REPORT_V1.md`** — the honest scorecard: which gates are closed, which aren't, and why.
 
-The one real blocker left is economic, not technical: the correctness bond (`live-bond-status.json`, `keys/` above) is currently unfunded. Everything else a counterparty needs to independently verify is in this repository right now.
+**Corrected 2026-09-11.** This paragraph previously read "the one real blocker left is economic … the correctness bond is currently unfunded." That stopped being true on 2026-09-09 and the sentence was not updated — the same staleness class as the defects in `SUPERSESSION.json`.
+
+The bond is **funded**: `10.789999` USDC against a bonded `10.00`, observed 2026-09-11T16:30:21Z by direct `eth_call` on Base. Two things a counterparty should weigh, both stated in the terms rather than left to be discovered: custody is a 2-of-2 Safe whose **both owners are the same person** (`SINGLE_PERSON_MULTIDEVICE` — real theft resistance, zero counterparty governance), and there is **no committed payout SLA**, because the second signature depends on one human with no backup signer. An adjudicated debt is instead recorded durably the moment it is owed, and goes `OVERDUE` in the open after 72h.
 
 ## Why this is a different layer than dispute-resolution-by-LLM-jury
 

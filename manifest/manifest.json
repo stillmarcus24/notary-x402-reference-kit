@@ -1,18 +1,44 @@
 {
-  "manifest_version": "foreseal-stillos-interop-v1",
+  "manifest_version": "foreseal-stillos-interop-v1.1",
+  "supersedes": "foreseal-stillos-interop-v1",
   "date_created": "2026-09-06",
-  "status": "DRAFT_PRE_TEST_NOT_YET_EXECUTED",
+  "date_corrected": "2026-09-11",
+  "status": "TERMS_FROZEN — TEST NOT YET EXECUTED",
+  "canonicality": {
+    "this_file_is_canonical": true,
+    "rule": "This file is the single source of truth for every value in this package. docs/FORESEAL_BILATERAL_TERMS_V1_1.md and manifest/manifest.md are generated from it or checked against it by tools/check-consistency.cjs. If any human-readable document disagrees with this file, this file wins and the disagreement is a defect.",
+    "why_this_rule_exists": "At tag foreseal-bilateral-v1 the human terms and this manifest disagreed materially on the bond wallet, the funding status, the custody model and the slash-execution path. A provenance package whose own machine-readable record contradicts its prose has no business asking anyone to trust its receipts. See SUPERSESSION.json for the full list."
+  },
+  "identification": {
+    "release_tag": "foreseal-bilateral-v1.1",
+    "repository": "https://github.com/stillmarcus24/notary-x402-reference-kit",
+    "how_to_resolve": "git rev-list -n1 foreseal-bilateral-v1.1  — or GET https://api.github.com/repos/stillmarcus24/notary-x402-reference-kit/tags",
+    "resolved_commit_sha_is_deliberately_not_quoted_here": true,
+    "why_not_quoted": "A document cannot contain its own commit hash, and the v1 attempt to quote one in prose is exactly how v1 shipped wrong: its Parties table claimed the tag resolved to cd0c3f630f92… while the tag actually resolved to c68e06aa2d69…. This package therefore never quotes its own SHA. Resolve the tag, and verify content with the per-file checksums below, which are self-verifying and independent of any commit hash.",
+    "immutability": {
+      "claim": "The versioned tag identifies the release; the resolved commit SHA is the immutable object being reviewed.",
+      "tag_is_mechanically_protected": false,
+      "disclosure": "This repository has zero rulesets and no branch/tag protection (verifiable: GET /repos/stillmarcus24/notary-x402-reference-kit/rulesets returns []). A git tag is therefore movable by anyone with write access. Tag foreseal-bilateral-v1 said 'A tag, not a branch head, so it cannot drift' — that was an overclaim and is retracted. The durable identifier is the commit SHA you resolve, plus the checksums below. Record the SHA when you resolve it; do not rely on the tag alone."
+    }
+  },
   "parties": {
     "stillos": {
-      "implementation": "StillOS Notary (core/notary_service_marcus.cjs)",
-      "repo": "core (nested git repo at /home/marcus/core)",
-      "commit": "b2efdea85d89aa2849441f44a19c65b3a2db717e",
+      "implementation": "StillOS Notary — bond, dispute and slash path published at implementation/bond/ in this repository",
+      "repo": "https://github.com/stillmarcus24/notary-x402-reference-kit",
+      "release_tag": "foreseal-bilateral-v1.1",
       "file_checksums_sha256": {
-        "core/notary_service_marcus.cjs": "1993d3160e90fa9aad4c689ae02fd0d70f6666cc48d8fb9559523e7f6cfd8d37",
-        "core/verdict_dispute.cjs": "0ac165e3f54b8200426048ed1f65e808b1f2710900547ce5ba57c9603df43c14",
-        "core/notary_bond.cjs": "c5aca9e6e04927335227b94b4db6d233d33d4a826a569e55f16b657cc32114eb",
-        "core/notary_recovery_signer.cjs": "5a379cbbb7239f107c1b1e96d3993292e9e27bd36df3aaf65d4e14936f62d5fa",
-        "core/keyring.cjs": "fafcbe1feb2ea594e13577ff7eccc45eacef3adb5d7b61a67a00438fc5dd19e6"
+        "_note": "Paths are relative to this repository and are publicly fetchable. At tag foreseal-bilateral-v1 this block instead listed paths under /home/marcus/core with a commit SHA (b2efdea85d89aa2849441f44a19c65b3a2db717e) in a local repository that has no remote — GET /repos/.../commits/b2efdea… returns HTTP 422 'No commit found for SHA'. That is the same unfetchable-pin defect ForeSeal identified on 2026-09-10, still present inside the canonical manifest after the human document was corrected. Three of the five checksums were also stale against the live code they named.",
+        "implementation/bond/notary_bond.cjs": "15b1727ff82b1c3614de5d26d096b0623b889d9a631b5f8de2f14a836f2d69c9",
+        "implementation/bond/notary_bond_slash.cjs": "fc7d1c6d078aae894623a6569632c2256cce5a7828460353e9c20179f4198279",
+        "implementation/bond/verdict_dispute.cjs": "1cd638de82ff166bbde4b838ee55acae5c4c6d07aecf90394c93f4ea01559057",
+        "implementation/bond/slash_obligations.cjs": "b91bf15812f8532dcd72325de4ae0cdcf8b2260c7875e6cba052ee9cb97087cd",
+        "implementation/bond/bond_monitor.cjs": "aa40dfde548187d24869355366301dd0e3e772f12afd1799667cdd423104e7bd",
+        "implementation/bond/notary_bond_mirror_refresh.cjs": "219278cdcd3679b5a55638199fd5858aa82c32511bb7539f962098eef132f728",
+        "verify-offline-pinned.js": "dcfb3d03d9190eacc5475f94334cc37aaca7972e2a35e34a0d98dd5300870ff6"
+      },
+      "deployment_status": {
+        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-11T17:04:59.168Z)",
+        "note": "Whether the code published above is byte-identical to what the live notary process is running. Stated explicitly because a published implementation that differs from the deployed one is a provenance claim that fails exactly where it matters."
       },
       "public_base_url": "https://stillosdigitalholdings.com/notary"
     },
@@ -20,53 +46,134 @@
       "implementation": "ForeSeal (as identified publicly by @0rkz on x402-foundation/x402#2887)",
       "repo": "github.com/0rkz/foreseal-x402-conformance",
       "commit": null,
-      "note": "Not yet supplied by ForeSeal as of manifest creation. To be filled in and re-hashed before any funds move."
+      "note": "Not supplied by ForeSeal as of this revision. StillOS does not require it in order to be reviewed, and does not represent that ForeSeal has agreed to anything in this file beyond the preconditions ForeSeal stated publicly on 2026-07-28."
     }
   },
   "reference_source": {
     "kind": "already-merged public GitHub pull request",
-    "why_this_reference": "Deterministic, keyless, re-runnable by anyone, controlled by neither party. Independently confirmed live against api.github.com on 2026-09-06.",
+    "why_this_reference": "Deterministic, keyless, re-runnable by anyone, controlled by neither party. Nominated by 0rkz on his own neutrality terms.",
     "repository": "python/cpython",
     "pull_request_number": 154769,
     "pull_request_url": "https://github.com/python/cpython/pull/154769",
     "merged": true,
     "merged_at": "2026-07-27T14:00:20Z",
-    "merge_commit_sha": "c7b9a13a7528342fdac47a2121248f0b989131e5"
+    "merge_commit_sha": "c7b9a13a7528342fdac47a2121248f0b989131e5",
+    "reverified_at": "2026-09-11T16:30:00Z"
   },
   "claim": {
     "exact_text": "python/cpython pull request #154769 is merged.",
     "expected_truth_condition": "GET https://api.github.com/repos/python/cpython/pulls/154769 returns merged:true and merge_commit_sha == c7b9a13a7528342fdac47a2121248f0b989131e5.",
-    "expected_verdict": "CONFIRMED",
+    "stillos_expected_verdict": "CONFIRMED",
     "freshness": "permanent (once merged, this fact does not change)"
   },
   "resolver": {
     "type": "github_pr",
-    "spec": { "type": "github_pr", "owner": "python", "repo": "cpython", "number": 154769 },
+    "spec": {
+      "type": "github_pr",
+      "owner": "python",
+      "repo": "cpython",
+      "number": 154769
+    },
     "implementation": "core/general_resolvers.cjs :: resolveGithubPR()",
     "resolver_code_hash": "cb060461026e03d217648055ba85d85cacb6729dbe56fd1bfad7b94b30444221",
     "source_queried": "https://api.github.com/repos/python/cpython/pulls/154769 (keyless, public GitHub REST API)",
     "independent": true,
     "settles_against": "https://github.com/python/cpython/pull/154769"
   },
+  "success_criterion": {
+    "_correction_2026_09_11": "Tag foreseal-bilateral-v1 asserted, in both this manifest and the human terms, that 'A REJECTED terminal state is a successful, valid test outcome' and that 'Neither party will characterize a REJECTED outcome as a failed test.' Stated as a bilateral term, that was false: ForeSeal agreed to no such thing. 0rkz corrected the attribution publicly and the attribution is withdrawn here as well as in prose. StillOS does not ask ForeSeal to pre-approve any terminal state.",
+    "bilateral": "Both parties execute the frozen lifecycle below, independently verify the resulting artifacts, and publish their observations and any divergences. No terminal outcome is pre-agreed by either party.",
+    "no_terminal_state_is_pre_agreed": true,
+    "stillos_local_expectation": {
+      "expectation": "Because the reference fact is permanently true, StillOS expects the dispute re-run to agree with the original verdict and therefore to terminate REJECTED.",
+      "status": "This is StillOS's own prediction, recorded in advance so it can be checked against the result. It is not a bilateral agreement, it is not binding on ForeSeal, and ForeSeal is free to characterize any outcome however its own review supports."
+    }
+  },
   "lifecycle_steps": [
     {
       "step": 1,
-      "action": "ForeSeal calls POST /claim-verdict from a ForeSeal-controlled wallet, paying the x402-quoted price, with resolver spec above.",
+      "action": "ForeSeal calls POST /claim-verdict from a ForeSeal-controlled wallet, paying the x402-quoted price, with the resolver spec above.",
       "endpoint": "POST https://stillosdigitalholdings.com/notary/claim-verdict",
-      "must_not_use": "The free tier (no payment) does not return a verdict_receipt hash/signature to the caller and is NOT usable for this test -- confirmed live 2026-09-06 (signed:false, verdict_receipt:null on the free path)."
+      "must_not_use": "The free tier does not return a verdict_receipt hash/signature to the caller and is NOT usable for this test — confirmed live 2026-09-06 (signed:false, verdict_receipt:null on the free path)."
     },
-    { "step": 2, "action": "StillOS returns a signed, hash-chained claim receipt AND a signed, hash-chained verdict receipt, both bound to the resolver above.", "authority": "core/notary_recovery_signer.cjs :: commit()" },
-    { "step": 3, "action": "StillOS resolves the claim against api.github.com in real time and posts the verdict inline in the same response.", "authority": "core/general_resolvers.cjs :: resolveGithubPR()" },
-    { "step": 4, "action": "ForeSeal verifies the verdict receipt OFFLINE: recompute receipt_hash, resolve notary_fp against the PINNED key/keyring below (not a live /notary/health call), verify Ed25519 signature, confirm chain to prior receipt.", "no_callback_required": true },
-    { "step": 5, "action": "ForeSeal files POST /dispute with receipt_hash + the exact verdict_object it received + the same resolver spec + counter-evidence/reason.", "endpoint": "POST https://stillosdigitalholdings.com/notary/dispute", "fee_usd": 1.00 },
-    { "step": 6, "action": "verdict_dispute.cjs re-runs the SAME resolver spec fresh, right now, and compares the fresh label to the original verdict label.", "expected_result": "REJECTED (fresh re-run reconfirms CONFIRMED, since the claim is objectively, permanently true) -- this is a valid, successful exercise of the full adjudication path, not a failed test. See dispute_semantics below." },
-    { "step": 7, "action": "IF (and only if) the dispute is UPHELD, a slash directive is queued (DRY-RUN, founder alert fired) -- NOT auto-paid. Marcus reviews and, if he approves, runs notary_bond_slash.cjs --execute manually.", "automatic_payout": false }
+    {
+      "step": 2,
+      "action": "StillOS returns a signed, hash-chained claim receipt AND a signed, hash-chained verdict receipt, both bound to the resolver above.",
+      "authority": "core/notary_recovery_signer.cjs :: commit()"
+    },
+    {
+      "step": 3,
+      "action": "StillOS resolves the claim against api.github.com in real time and posts the verdict inline in the same response.",
+      "authority": "core/general_resolvers.cjs :: resolveGithubPR()"
+    },
+    {
+      "step": 4,
+      "action": "ForeSeal verifies the verdict receipt OFFLINE: recompute receipt_hash, resolve notary_fp against the PINNED key/keyring in keys/, verify Ed25519 signature, confirm chain to prior receipt.",
+      "no_callback_required": true
+    },
+    {
+      "step": 5,
+      "action": "ForeSeal files POST /dispute with receipt_hash + the exact verdict_object it received + the same resolver spec + counter-evidence/reason. Optionally supplies disputant_wallet, the 0x address any payout would be sent to.",
+      "endpoint": "POST https://stillosdigitalholdings.com/notary/dispute",
+      "fee_usd": 1
+    },
+    {
+      "step": 6,
+      "action": "verdict_dispute.cjs re-runs the SAME resolver spec fresh, right now, and compares the fresh label to the original verdict label. The terminal state is whatever that comparison produces.",
+      "stillos_expected_result": "REJECTED — see success_criterion.stillos_local_expectation. Not pre-agreed by ForeSeal."
+    },
+    {
+      "step": 7,
+      "action": "IF the dispute is UPHELD, a payout obligation is recorded durably and synchronously before any signature is sought or any alert is sent. See payout_obligation below. Payment itself requires a human 2-of-2 Safe signature and is never automatic.",
+      "automatic_payout": false
+    }
   ],
   "dispute_semantics": {
-    "scripted_exercise_disclosure": "Because the reference claim (an already-merged, permanent GitHub PR fact) is objectively true and cannot change, a good-faith dispute against it is EXPECTED to resolve REJECTED on re-run. This test is a SCRIPTED EXERCISE of the intake -> re-run -> terminal-state adjudication path, not an attempt to manufacture a false original verdict. A REJECTED terminal state is a successful, valid test outcome under this manifest, identical in evidentiary value to an UPHELD one -- both prove the mechanism runs against a real external counterparty. Neither party will characterize a REJECTED outcome as a failed test.",
-    "hash_binding": "The disputer must supply the exact verdict_object they were given; it is checked against the receipt's committed claim_sha256 before anything else runs -- a fabricated verdict_object is rejected before any write.",
-    "target_mutation_guard": "The fresh re-run's settles_against must equal the original verdict's settles_against, or the dispute is rejected -- a disputer cannot swap in an easier target.",
-    "dispute_window": "48 hours from the original verdict receipt's timestamp."
+    "hash_binding": "The disputer must supply the exact verdict_object they were given; it is checked against the receipt's committed claim_sha256 before anything else runs — a fabricated verdict_object is rejected before any write.",
+    "target_mutation_guard": "The fresh re-run's settles_against must equal the original verdict's settles_against, or the dispute is rejected — a disputer cannot swap in an easier target.",
+    "indeterminate_guard": "If the resolver cannot reach its source, the dispute returns INDETERMINATE and is retryable. An unreachable source never counts as a refutation and never reserves a dispute_id.",
+    "dispute_window": "48 hours from the original verdict receipt's timestamp.",
+    "dedup": "A deterministic dispute_id derived from protocol version, disputed receipt hash, committed claim hash, normalized challenger and normalized counter-evidence digest. A duplicate produces no second receipt and no second obligation."
+  },
+  "payout_obligation": {
+    "_added_2026_09_11": "Answers the question 0rkz asked on x402#2887: what happens to a claim while it waits for the second signature. At tag foreseal-bilateral-v1 the answer was: nothing durable. The slash directive was an in-memory object returned in the HTTP response plus a best-effort alert in a swallowed try/catch; it was never persisted, and the live /dispute handler did not even forward it to the caller. Under 2-of-2 custody that interval is unbounded, so the debt is now written down before anything else happens.",
+    "implementation": "implementation/bond/slash_obligations.cjs",
+    "opened_when": "Synchronously inside the dispute request, immediately on an UPHELD adjudication — before the reputation write, before the founder alert, before any signature is sought. Deliberately not wrapped in a try/catch: if the obligation cannot be recorded, the request fails loudly rather than returning a successful-looking overturn with no record of the debt.",
+    "ledger": "state/proof-notary/slash-obligations.jsonl — append-only, hash-chained, tamper-evident. Current state is a fold over events, never a mutable field.",
+    "states": [
+      "SLASH_OWED",
+      "AWAITING_MULTISIG",
+      "PAID",
+      "OVERDUE"
+    ],
+    "overdue_is_derived": "OVERDUE is computed from elapsed time at read, not written by a scheduled job, so it cannot fail to fire because a cron did not run.",
+    "fields_recorded": [
+      "obligation_id",
+      "verdict_receipt_hash",
+      "dispute_receipt_hash",
+      "disputant",
+      "amount_usd",
+      "owed_at",
+      "custody_type",
+      "bond_wallet",
+      "asset_contract",
+      "network",
+      "payout_calldata",
+      "safe_tx_hash",
+      "payout_tx",
+      "state"
+    ],
+    "payout_calldata": "The exact ERC-20 transfer the Safe must execute is recorded at adjudication time, so a counterparty can verify what should be signed rather than trusting a later description of it. Recording calldata is not proposing or signing it — StillOS does not auto-propose Safe transactions.",
+    "discharge": "PAID is only written after an on-chain payout has been verified: notary_bond_slash.cjs --record-external re-reads the transaction receipt and requires a real USDC Transfer of the stated amount from the bond wallet to the disputant before it will record anything.",
+    "payout_sla": {
+      "committed_sla": null,
+      "status": "NO FROZEN PAYOUT SLA",
+      "reason": "Payment requires 2 of 2 Safe signatures. One key is held on the box and could be signed programmatically; the other is on a single human's phone, with no backup signer, no second human, and no on-call rotation. StillOS cannot mechanically honour a deadline that depends on one person being awake, and will not publish one it cannot honour.",
+      "what_is_committed_instead": "The obligation is recorded durably and synchronously at adjudication time, is independently inspectable from that moment, and reports OVERDUE after the visibility threshold below. This is a guarantee that lateness is visible, not a guarantee of promptness.",
+      "overdue_threshold_hours": 72,
+      "overdue_threshold_is_a_committed_sla": false,
+      "materiality": "Whether the absence of a payout SLA makes ForeSeal's Precondition 1 unsatisfied is ForeSeal's assessment to make, not StillOS's."
+    }
   },
   "signing_identity": {
     "algorithm": "Ed25519",
@@ -74,10 +181,10 @@
     "current_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEARz4QMQCVd+ImBqd3YmkIA3NYd857O+5dAWNhY7V2ryk=\n-----END PUBLIC KEY-----\n",
     "key_effective_from": "2026-07-31T00:09:13.684Z",
     "keyring_endpoint": "https://stillosdigitalholdings.com/notary/keyring",
-    "keyring_disclosure": "The active key has already rotated once (2026-06-27 key retired 2026-07-31, superseded by the key pinned above). GET /notary/keyring (added 2026-09-06) returns the full historical registry keyed by fingerprint so a receipt signed under ANY past or future key remains independently verifiable without ever trusting /notary/health's current contents at verification time.",
+    "keyring_disclosure": "The active key has already rotated once (2026-06-27 key retired 2026-07-31, superseded by the key pinned above). GET /notary/keyring returns the full historical registry keyed by fingerprint so a receipt signed under ANY past or future key remains independently verifiable without ever trusting /notary/health's current contents at verification time.",
     "foreseal_signing_key": null,
     "verification_requires_no_callback_to_stillos": true,
-    "offline_verifier_script": "notary-x402-reference-kit/verify-offline-pinned.js (this repo)"
+    "offline_verifier_script": "verify-offline-pinned.js (this repository)"
   },
   "wallets": {
     "stillos_payto_wallet": {
@@ -85,10 +192,43 @@
       "purpose": "Receives x402 settlement + dispute fees (operational revenue wallet, NOT the bond wallet)."
     },
     "stillos_bond_wallet": {
+      "address": "0x6243E363a3047173346Fa49C947Db204D4445634",
+      "purpose": "Collateral only. Source of any slash payout. Independently verifiable via USDC.balanceOf on Base.",
+      "custody_type": "gnosis-safe-2of2",
+      "_correction_2026_09_11": "At tag foreseal-bilateral-v1 this manifest still named 0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf as the bond wallet and reported the bond unfunded, while the human terms in the same commit named this Safe and reported it funded and active."
+    },
+    "stillos_gas_relayer": {
       "address": "0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf",
-      "purpose": "Collateral only. Source of any slash payout. Independently verifiable via USDC.balanceOf on Base."
+      "purpose": "Formerly the single-key bond wallet; retired as collateral custody 2026-09-09. Now lands payout transactions and pays Base gas. Holds no collateral."
     },
     "foreseal_wallet": null
+  },
+  "custody": {
+    "type": "gnosis-safe-2of2",
+    "safe_address": "0x6243E363a3047173346Fa49C947Db204D4445634",
+    "safe_version": "1.4.1",
+    "chain": "Base mainnet",
+    "threshold": 2,
+    "owner_count": 2,
+    "owners": [
+      {
+        "address": "0x9061D5097C4c42D54693407Ce73923b76Df844F9",
+        "attribution": "Marcus Still — phone (MetaMask)",
+        "attributable_from_stillos_records": true
+      },
+      {
+        "address": "0xe173379d7aAD714Ae1Db1041Fa6E5c0D6F613F83",
+        "attribution": "StillOS box signer — key file held on the StillOS host",
+        "attributable_from_stillos_records": true
+      }
+    ],
+    "independently_verifiable": "Call getOwners() and getThreshold() on the Safe at Base mainnet. Both return the values above.",
+    "classification": "SINGLE_PERSON_MULTIDEVICE",
+    "classification_basis": "Both owner addresses are attributable to Marcus Still from StillOS's own records (still-os-consciousness/deploy-sovereign-safe.mjs sets exactly these two owners; the box signer's private key is on the StillOS host and is used by still-os-consciousness/safe-bond-refund-propose.mjs). There is no second party. A different address is not an independent party, and this manifest does not claim otherwise.",
+    "security_benefit": "Real and independently checkable. Compromise of the StillOS host alone — including root on that host — cannot move the collateral, because the box holds only one of the two required signatures. This materially raises the cost of stealing the bond.",
+    "counterparty_governance_benefit": "None. Both keys are controlled by the same person. No independent party can compel, co-sign, or veto a payout. Multisig custody here protects the collateral from theft; it does not give a counterparty any additional assurance that an adjudicated debt will actually be paid. Those are different properties and are stated separately on purpose.",
+    "what_secures_payment_instead": "The obligation ledger (payout_obligation above) makes an unpaid adjudicated debt permanently visible and drops the bond out of health. That is a reputational and observability rail, not a trustless one.",
+    "honest_summary": "This is a self-custodied bond with hardened custody, not a trustless escrow contract. 'Slashable' here means a bonded payout obligation subject to 2-of-2 governed execution. It does not mean an instant or trustless slash, and no wording in this package should be read as claiming that."
   },
   "fees": {
     "currency": "USDC",
@@ -96,40 +236,82 @@
     "chain_id": 8453,
     "token_contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     "token_decimals": 6,
-    "settlement_fee_usd": { "current": 0.05, "current_valid_until": "2026-10-13T00:00:00Z", "after_current_valid_until": 0.25, "endpoint": "POST /claim-verdict", "note": "Time-bound launch pricing, disclosed here so the number cannot surprise either party mid-negotiation." },
-    "dispute_fee_usd": { "amount": 1.00, "endpoint": "POST /dispute", "free_tier": null, "note": "No free tier for /dispute. Non-refundable either way (anti-spam design), disclosed up front." },
-    "gas_responsibility": "x402 uses EIP-3009 transferWithAuthorization -- ForeSeal signs an off-chain authorization and pays ZERO gas. StillOS's facilitator submits the on-chain transfer and pays Base gas on both settlement and dispute-fee collection.",
+    "settlement_fee_usd": {
+      "current": 0.05,
+      "current_valid_until": "2026-10-13T00:00:00Z",
+      "after_current_valid_until": 0.25,
+      "endpoint": "POST /claim-verdict",
+      "note": "Time-bound launch pricing, disclosed here so the number cannot surprise either party mid-negotiation."
+    },
+    "dispute_fee_usd": {
+      "amount": 1,
+      "endpoint": "POST /dispute",
+      "free_tier": null,
+      "note": "No free tier for /dispute. Non-refundable either way (anti-spam design), disclosed up front."
+    },
+    "gas_responsibility": "x402 uses EIP-3009 transferWithAuthorization — ForeSeal signs an off-chain authorization and pays ZERO gas. StillOS's facilitator submits the on-chain transfer and pays Base gas on both settlement and dispute-fee collection.",
+    "payout_gas_responsibility": "Borne by the gas relayer 0xA3a0…0Caf, not the Safe. The Safe holds collateral and no ETH by design.",
     "other_fees_in_this_lifecycle": "None. (POST /self-audit/dispute-entry at $2.00 is a separate, unrelated product surface and is explicitly out of scope for this test.)"
   },
   "exposure_caps": {
-    "foreseal_total_outlay_usd": { "typical": 1.05, "worst_case_if_run_after_2026-10-13": 1.25, "components": "settlement (0.05 or 0.25) + dispute (1.00)" },
-    "stillos_total_outlay_usd": { "max_bond_slash": 1.00, "condition": "only if the dispute is UPHELD, requires a separate Marcus-approved --execute to actually pay; never automatic", "gas_for_payout": "borne by the bond wallet's existing Base ETH balance, already funded above the required floor" },
-    "hard_stop_combined_usd": 2.00,
+    "foreseal_total_outlay_usd": {
+      "typical": 1.05,
+      "worst_case_if_run_after_2026-10-13": 1.25,
+      "components": "settlement (0.05 or 0.25) + dispute (1.00)"
+    },
+    "stillos_total_outlay_usd": {
+      "max_bond_slash": 1,
+      "condition": "only if the dispute is UPHELD; recorded as a durable obligation immediately, paid only by a human 2-of-2 Safe signature, never automatic",
+      "gas_for_payout": "borne by the gas relayer's existing Base ETH balance, above the required floor"
+    },
+    "hard_stop_combined_usd": 2,
     "abort_if_exceeded": true
   },
   "bond": {
     "bond_id": "stillos-correctness-bond-v1",
-    "publicly_committed_target_usd": 10.00,
-    "per_verdict_max_usd": 1.00,
-    "onchain_balance_usd_at_manifest_creation": 0,
-    "active_at_manifest_creation": false,
-    "funding_status": "NOT YET FUNDED as of manifest creation -- see funding proposal in the accompanying report. Manifest will be re-hashed and re-published once funded, before any settlement is requested from ForeSeal.",
-    "wallet": "0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf",
+    "publicly_committed_target_usd": 10,
+    "per_verdict_max_usd": 1,
+    "wallet": "0x6243E363a3047173346Fa49C947Db204D4445634",
+    "custody_type": "gnosis-safe-2of2",
     "chain": "Base mainnet",
     "token_contract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    "verify_instruction": "Anyone can independently call USDC.balanceOf(wallet) on Base mainnet. Do not trust this file or /notary/bond's numbers without checking the chain directly."
+    "onchain_balance_observation": {
+      "balance_usdc": 10.789999,
+      "observed_at": "2026-09-11T16:30:21Z",
+      "method": "eth_call USDC.balanceOf(0x6243E363a3047173346Fa49C947Db204D4445634) against https://mainnet.base.org",
+      "raw_return": "0x0000000000000000000000000000000000000000000000000000000000a4a46f",
+      "note": "This is an observation with a timestamp, not a standing claim. Re-read the chain."
+    },
+    "active": true,
+    "funding_status": "FUNDED. Balance 10.789999 USDC >= bonded 10.00 at the observation above.",
+    "_correction_2026_09_11": "At tag foreseal-bilateral-v1 this block still read onchain_balance_usd_at_manifest_creation: 0, active_at_manifest_creation: false, funding_status: 'NOT YET FUNDED', against the retired wallet — after the bond had been funded and while the human terms in the same commit reported it funded and active.",
+    "health_semantics": {
+      "_added_2026_09_11": "Collateral being funded does not mean every economic obligation is current. Before this revision, bond health was computed from balance + gas floor + slash-log integrity only, all of which stay green while an adjudicated unpaid debt sits outstanding.",
+      "reported_separately": [
+        "collateral_funded",
+        "slash_log_intact",
+        "obligation_ledger_intact",
+        "unpaid_slash_obligations",
+        "overdue_slash_obligations",
+        "all_slash_obligations_current"
+      ],
+      "healthy_requires": "collateral_funded AND payable AND slash_log_intact AND available_bond > 0 AND obligation_ledger_intact AND overdue_slash_obligations == 0"
+    },
+    "verify_instruction": "Anyone can independently call USDC.balanceOf(wallet) on Base mainnet, and getOwners()/getThreshold() on the Safe. Do not trust this file or /notary/bond's numbers without checking the chain directly."
   },
-  "expected_terminal_states": [
-    "settlement: settled:true on Base, payer wallet != any StillOS-controlled address",
-    "verdict: CONFIRMED (matches independent re-run of the same GitHub PR)",
-    "offline_verification: signature_valid AND hash_intact AND chain_intact, computed with zero network calls to StillOS",
-    "dispute: REJECTED (expected, since the claim is objectively true) OR UPHELD (would trigger a queued, non-automatic slash directive)",
-    "if UPHELD: slash_directive status QUEUED_PENDING_APPROVAL -- payout requires a separate explicit Marcus --execute, is not part of this test's automatic scope"
-  ],
+  "expected_terminal_states": {
+    "_note": "These are the observable states the lifecycle can produce, plus StillOS's own predictions where it has one. Nothing here is a ForeSeal commitment.",
+    "settlement": "settled:true on Base, payer wallet != any StillOS-controlled address",
+    "verdict": "CONFIRMED expected by StillOS (matches an independent re-run of the same GitHub PR)",
+    "offline_verification": "signature_valid AND hash_intact AND chain_intact, computed with zero network calls to StillOS",
+    "dispute": "REJECTED or UPHELD. StillOS predicts REJECTED because the reference fact is permanently true. ForeSeal has pre-agreed neither.",
+    "if_upheld": "A durable obligation is opened in state SLASH_OWED before any signature is sought. Payment requires a human 2-of-2 Safe signature and carries no committed deadline."
+  },
   "publication_terms": {
     "both_parties_publish_independently": true,
     "divergences_are_published": true,
     "no_outcome_representation_before_both_reports_exist": true,
+    "neither_writeup_subject_to_the_other_review": true,
     "not_a_partnership": true,
     "not_an_endorsement": true,
     "not_a_customer_relationship": true,

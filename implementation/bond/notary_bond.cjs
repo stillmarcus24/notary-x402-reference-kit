@@ -25,6 +25,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const obligations = require('/home/marcus/core/slash_obligations.cjs');
 
 const CONFIG = '/home/marcus/still-os-consciousness/state/proof-notary/bond.json';
 const SLASH_LOG = '/home/marcus/still-os-consciousness/state/proof-notary/bond-slash-log.jsonl';
@@ -139,10 +140,33 @@ async function getStatus() {
     bonded_usd: cfg.bonded_usd,
     per_verdict_max_usd: cfg.per_verdict_max_usd,
     onchain_balance_usd: Number(bal.usd.toFixed(6)),
+    // `active` stays balance-only and unchanged: existing callers and the static
+    // mirror depend on its meaning, and it is an honest answer to "is collateral
+    // posted". It is NOT an answer to "is this bond current on what it owes" —
+    // 2026-09-11 that distinction is made explicit on the public surface rather
+    // than only inside healthCheck(), because /bond is the endpoint a counterparty
+    // actually calls. A funded Safe sitting on an overdue adjudicated payout must
+    // not be able to present as fine here.
     active: bal.usd >= cfg.bonded_usd,
+    collateral_funded: bal.usd >= cfg.bonded_usd,
+    custody_type: cfg.custody_type || 'single-key-eoa',
     slash_count: slashes.length,
     slashed_total_usd: Number(slashed_total.toFixed(6)),
     slash_history: slashes,
+    ...(() => {
+      const ob = obligations.summary();
+      return {
+        obligation_ledger_intact: ob.obligation_ledger_intact,
+        unpaid_slash_obligations: ob.unpaid_slash_obligations,
+        unpaid_slash_obligations_usd: ob.unpaid_slash_obligations_usd,
+        overdue_slash_obligations: ob.overdue_slash_obligations,
+        overdue_threshold_hours: ob.overdue_threshold_hours,
+        overdue_threshold_is_a_committed_sla: false,
+        committed_payout_sla: null,
+        all_slash_obligations_current: ob.all_slash_obligations_current,
+        bond_current: (bal.usd >= cfg.bonded_usd) && ob.obligation_ledger_intact && ob.overdue_slash_obligations === 0,
+      };
+    })(),
     policy_hash: policyHash(cfg),
     slash_policy: cfg.slash_policy,
     mechanism: cfg.mechanism,
@@ -211,13 +235,42 @@ async function healthCheck() {
   if (!chain.ok) warnings.push('SLASH LOG TAMPERED: hash chain does not verify');
   const available = availableBondUsd(cfg);
   if (available <= 0) warnings.push('BOND EXHAUSTED: cumulative slashes have consumed the full pool');
+
+  // COLLATERAL FUNDED != OBLIGATIONS CURRENT (2026-09-11). Before this, `healthy`
+  // was computed purely from the balance, the gas floor and the slash-log chain —
+  // all of which stay green while an adjudicated, unpaid debt sits outstanding.
+  // Under 2-of-2 custody a payout can be owed for an unbounded interval, so a Safe
+  // holding plenty of USDC could report a fully healthy bond while being late on a
+  // slash it had already lost. These are now reported as separate facts, and an
+  // overdue obligation drops `healthy` on its own.
+  const ob = obligations.summary();
+  if (ob.unpaid_slash_obligations > 0) {
+    warnings.push(`UNPAID SLASH OBLIGATIONS: ${ob.unpaid_slash_obligations} adjudicated payout(s) totalling $${ob.unpaid_slash_obligations_usd} not yet discharged`);
+  }
+  if (ob.overdue_slash_obligations > 0) {
+    warnings.push(`OVERDUE SLASH OBLIGATIONS: ${ob.overdue_slash_obligations} unpaid past the ${ob.overdue_threshold_hours}h visibility threshold — the bond is late on a debt it has already lost`);
+  }
+  if (!ob.obligation_ledger_intact) warnings.push('OBLIGATION LEDGER TAMPERED: hash chain does not verify');
+
   return {
     bond_id: cfg.bond_id, wallet: cfg.wallet,
     custody_type: cfg.custody_type || 'single-key-eoa', gas_wallet: gasAddr,
     usdc_balance: usdc, eth_balance: eth,
     bonded_usd: cfg.bonded_usd, available_bond_usd: available, per_verdict_max_usd: cfg.per_verdict_max_usd,
+    // Four independently-readable facts, deliberately not collapsed into one boolean.
+    collateral_funded: funded,
+    slash_log_intact: chain.ok,
+    obligation_ledger_intact: ob.obligation_ledger_intact,
+    unpaid_slash_obligations: ob.unpaid_slash_obligations,
+    unpaid_slash_obligations_usd: ob.unpaid_slash_obligations_usd,
+    overdue_slash_obligations: ob.overdue_slash_obligations,
+    overdue_threshold_hours: ob.overdue_threshold_hours,
+    overdue_threshold_is_a_committed_sla: false,
+    all_slash_obligations_current: ob.all_slash_obligations_current,
+    // Retained for callers that already read these names.
     funded, payable, slash_chain_ok: chain.ok, slash_count: chain.count,
-    healthy: funded && payable && chain.ok && available > 0,
+    healthy: funded && payable && chain.ok && available > 0
+      && ob.obligation_ledger_intact && ob.overdue_slash_obligations === 0,
     warnings, ts: new Date().toISOString(),
   };
 }

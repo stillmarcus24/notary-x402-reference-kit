@@ -1,0 +1,204 @@
+{
+  "record_type": "stillos-package-supersession",
+  "record_version": 1,
+  "created_at": "2026-09-11T16:30:00Z",
+  "reason": "Self-audit of the frozen ForeSeal review package found that the 2026-09-10 correction — which repointed the implementation pin to a publicly fetchable tag after ForeSeal established that all four prior pins were unfetchable — fixed the prose and left the canonical machine-readable manifest uncorrected. The manifest that the terms themselves named as the source of truth still asserted a retired bond wallet, an unfunded $0 bond, an unfetchable local commit, no custody model, a single-key slash path that the live code now refuses, and a bilateral agreement that ForeSeal never made. Found by StillOS, not by ForeSeal.",
+  "previous": {
+    "tag": "foreseal-bilateral-v1",
+    "resolved_commit_sha": "c68e06aa2d690c24f0e271d5b714aac25482cb11",
+    "remains_published": true,
+    "disposition": "HISTORICAL — not moved, not rewritten, not deleted. It has been referenced externally and stays fetchable at the SHA above for audit. docs/FORESEAL_BILATERAL_TERMS_V1.md is retained verbatim in the tree and carries only a prepended supersession banner."
+  },
+  "new": {
+    "tag": "foreseal-bilateral-v1.1",
+    "resolved_commit_sha": null,
+    "why_null": "A document cannot contain its own commit hash. V1 tried: its Parties table claimed the tag resolved to cd0c3f630f92… when the tag actually resolved to c68e06aa2d69…, inside the very commit that was fixing stale pins. Resolve the tag instead — `git rev-list -n1 foreseal-bilateral-v1.1`, or the GitHub tags API — and verify content against manifest/manifest.json's per-file sha256 checksums, which are self-verifying and independent of any commit hash.",
+    "canonical_manifest": "manifest/manifest.json",
+    "human_terms": "docs/FORESEAL_BILATERAL_TERMS_V1_1.md",
+    "consistency_check": "tools/check-consistency.cjs"
+  },
+  "tag_immutability": {
+    "mechanically_enforced": false,
+    "evidence": "GET https://api.github.com/repos/stillmarcus24/notary-x402-reference-kit/rulesets returns []; GET /branches/main/protection returns 404 'Branch not protected'.",
+    "retraction": "V1 claimed 'A tag, not a branch head, so it cannot drift.' Nothing enforces that. The claim is withdrawn. The resolved commit SHA is the immutable object; the tag is a label."
+  },
+  "corrected_fields": [
+    {
+      "id": "D1",
+      "file": "manifest/manifest.json",
+      "field": "dispute_semantics.scripted_exercise_disclosure",
+      "was": "A REJECTED terminal state is a successful, valid test outcome under this manifest, identical in evidentiary value to an UPHELD one … Neither party will characterize a REJECTED outcome as a failed test.",
+      "now": "success_criterion.bilateral — procedural only; no terminal state is pre-agreed. StillOS's REJECTED prediction is recorded separately as success_criterion.stillos_local_expectation.",
+      "class": "false bilateral attribution"
+    },
+    {
+      "id": "D2",
+      "file": "docs/FORESEAL_BILATERAL_TERMS_V1.md",
+      "field": "Lifecycle step 7 and the 'Explicit disclosure' paragraph",
+      "was": "Expected: REJECTED … A REJECTED terminal state carries the same evidentiary value as UPHELD … Neither party will characterize a REJECTED outcome as a failed test.",
+      "now": "Withdrawn. ForeSeal agreed to exercise the adjudication path, not to any terminal state.",
+      "class": "false bilateral attribution"
+    },
+    {
+      "id": "D3",
+      "file": "manifest/manifest.json",
+      "field": "wallets.stillos_bond_wallet.address, bond.wallet",
+      "was": "0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf (retired as collateral custody 2026-09-09)",
+      "now": "0x6243E363a3047173346Fa49C947Db204D4445634; the retired address is recorded as stillos_gas_relayer.",
+      "class": "machine/human disagreement — the human terms in the same commit named the Safe"
+    },
+    {
+      "id": "D4",
+      "file": "manifest/manifest.json",
+      "field": "bond.onchain_balance_usd_at_manifest_creation, bond.active_at_manifest_creation, bond.funding_status",
+      "was": "0, false, 'NOT YET FUNDED as of manifest creation'",
+      "now": "onchain_balance_observation 10.789999 USDC observed 2026-09-11T16:30:21Z by eth_call; active true; FUNDED.",
+      "class": "machine/human disagreement — the human terms in the same commit reported the bond funded and active"
+    },
+    {
+      "id": "D5",
+      "file": "manifest/manifest.json",
+      "field": "status",
+      "was": "DRAFT_PRE_TEST_NOT_YET_EXECUTED",
+      "now": "TERMS_FROZEN — TEST NOT YET EXECUTED",
+      "class": "stale status"
+    },
+    {
+      "id": "D6",
+      "file": "manifest/manifest.json",
+      "field": "parties.stillos.repo, parties.stillos.commit",
+      "was": "'core (nested git repo at /home/marcus/core)' / b2efdea85d89aa2849441f44a19c65b3a2db717e",
+      "now": "https://github.com/stillmarcus24/notary-x402-reference-kit, release_tag foreseal-bilateral-v1.1, checksums on published paths.",
+      "class": "unfetchable pin",
+      "evidence": "GET /repos/stillmarcus24/notary-x402-reference-kit/commits/b2efdea85d89… returns HTTP 422 'No commit found for SHA'. Control: c68e06aa2d69… resolves normally. This is the same defect ForeSeal identified on 2026-09-10, still live inside the canonical manifest after the prose was fixed."
+    },
+    {
+      "id": "D7",
+      "file": "manifest/manifest.json",
+      "field": "parties.stillos.file_checksums_sha256",
+      "was": "3 of 5 checksums stale against the live files they named (notary_service_marcus.cjs, notary_bond.cjs, notary_recovery_signer.cjs); 2 still accurate (verdict_dispute.cjs, keyring.cjs)",
+      "now": "Checksums over files published in this repository, regenerated and verified by tools/seal-manifest.cjs and tools/check-consistency.cjs.",
+      "class": "stale content pin"
+    },
+    {
+      "id": "D8",
+      "file": "manifest/manifest.json",
+      "field": "custody (absent)",
+      "was": "No custody model recorded anywhere in the manifest; exposure_caps implied the bond wallet paid its own gas, which is the single-key model.",
+      "now": "custody block with Safe address, version, threshold, both owner addresses, per-owner attribution, and an explicit SINGLE_PERSON_MULTIDEVICE classification separating the security benefit from the (absent) counterparty-governance benefit.",
+      "class": "machine/human disagreement"
+    },
+    {
+      "id": "D9",
+      "file": "manifest/manifest.json",
+      "field": "lifecycle_steps[7]",
+      "was": "'Marcus reviews and, if he approves, runs notary_bond_slash.cjs --execute manually.'",
+      "now": "Obligation recorded durably first; payout requires a human 2-of-2 Safe signature followed by --record-external.",
+      "class": "documented path the live code refuses",
+      "evidence": "notary_bond_slash.cjs rejects --execute when custody_type != single-key-eoa, so the documented command could not have worked."
+    },
+    {
+      "id": "D10",
+      "file": "docs/FORESEAL_BILATERAL_TERMS_V1.md",
+      "field": "implementation pin paragraph",
+      "was": "A tag, not a branch head, so it cannot drift.",
+      "now": "Retracted. Repository has zero rulesets and no branch/tag protection; the resolved commit SHA is the immutable object.",
+      "class": "mechanical overclaim"
+    },
+    {
+      "id": "D11",
+      "file": "docs/FORESEAL_BILATERAL_TERMS_V1.md",
+      "field": "Parties table",
+      "was": "tag foreseal-bilateral-v1 → cd0c3f630f92…",
+      "now": "No self-referential SHA is quoted. Resolve the tag.",
+      "class": "wrong self-reference",
+      "evidence": "The tag resolves to c68e06aa2d690c24f0e271d5b714aac25482cb11. cd0c3f630f92be94bde61f7c3c6f3ddd51051239 is a real commit two earlier — so the document misidentified its own release inside the commit that was fixing pin staleness."
+    },
+    {
+      "id": "D12",
+      "file": "docs/FORESEAL_BILATERAL_TERMS_V1.md",
+      "field": "Signing identity → historical registry",
+      "was": "GET https://nolawealthfinancial.com/notary/keyring (retired domain)",
+      "now": "https://stillosdigitalholdings.com/notary/keyring, matching the manifest.",
+      "class": "retired domain",
+      "evidence": "The same document describes replacing 95 hardcoded references to that domain, while still citing it for its own keyring endpoint."
+    },
+    {
+      "id": "D13",
+      "file": "live-bond-status.json",
+      "field": "claim_endpoint, status_endpoint",
+      "was": "https://nolawealthfinancial.com/notary/{dispute,bond} (retired domain)",
+      "now": "https://stillosdigitalholdings.com/notary/{dispute,bond}",
+      "class": "retired domain"
+    },
+    {
+      "id": "D14",
+      "file": "implementation/bond/verdict_dispute.cjs",
+      "field": "disputeObj.disputant_wallet",
+      "was": "Read by buildSlashDirective() but never written by anything, so it was permanently null and every upheld dispute emitted the placeholder '<disputant_payout_0x>' instead of a real payout address.",
+      "now": "Carried from the request as an optional, validated disputant_wallet. A bad or absent value degrades to null and the obligation records that no wallet was supplied rather than inventing one.",
+      "class": "dead code path"
+    },
+    {
+      "id": "D15",
+      "file": "implementation/bond/verdict_dispute.cjs",
+      "field": "buildSlashDirective()",
+      "was": "The slash directive was an in-memory object returned to the caller plus a founder alert inside a swallowed try/catch. Nothing was persisted. If the alert failed and the caller discarded the response, an adjudicated debt left no trace.",
+      "now": "implementation/bond/slash_obligations.cjs — append-only, hash-chained obligation ledger opened synchronously on UPHELD before the reputation write, before the alert, and before any signature is sought. Not wrapped in a try/catch: failure to record the debt fails the request.",
+      "class": "no durable record of an adjudicated debt"
+    },
+    {
+      "id": "D16",
+      "file": "core/notary_service_marcus.cjs (live /dispute handler)",
+      "field": "POST /dispute response",
+      "was": "fileDispute() returned slash_directive and the HTTP handler discarded it. On an upheld dispute the disputant received only upheld:true and a receipt — nothing about the payout owed to them.",
+      "now": "The handler accepts an optional disputant_wallet and returns a payout_obligation block carrying obligation_id, state, amount, disputant, owed_at, custody_type, bond wallet, the exact payout calldata, and an explicit committed_payout_sla: null. Deployed and verified live 2026-09-11.",
+      "class": "adjudicated debt invisible to the counterparty",
+      "status": "FIXED AND DEPLOYED"
+    },
+    {
+      "id": "D19",
+      "file": "core/notary_bond.cjs :: getStatus()",
+      "field": "GET /bond response",
+      "was": "The public bond endpoint — the surface a counterparty actually calls — reported only balance-derived `active: true` with no custody type and no obligation state. The separated health facts added in D17 lived only inside healthCheck(), which is used by the cron monitor. A funded Safe sitting on an overdue adjudicated payout would have presented as fine to anyone checking /bond.",
+      "now": "GET /bond additively exposes collateral_funded, custody_type, obligation_ledger_intact, unpaid_slash_obligations(_usd), overdue_slash_obligations, overdue_threshold_hours, overdue_threshold_is_a_committed_sla, committed_payout_sla and bond_current. `active` keeps its original balance-only meaning for existing callers and the static mirror.",
+      "class": "sibling of D17 on the public surface — found by checking whether the D17 fix was actually visible where it is claimed",
+      "status": "FIXED AND DEPLOYED"
+    },
+    {
+      "id": "D17",
+      "file": "implementation/bond/notary_bond.cjs",
+      "field": "healthCheck().healthy",
+      "was": "funded && payable && slash_chain_ok && available > 0 — every term stays green while an adjudicated unpaid debt sits outstanding, so a Safe holding plenty of USDC reported a fully healthy bond while late on a slash it had already lost.",
+      "now": "collateral_funded, slash_log_intact, obligation_ledger_intact, unpaid_slash_obligations, overdue_slash_obligations and all_slash_obligations_current are reported as separate facts, and an overdue obligation drops healthy on its own.",
+      "class": "health metric that could not see the obligation it was supposed to guarantee"
+    },
+    {
+      "id": "D18",
+      "file": "README.md",
+      "field": "Interop readiness — closing paragraph",
+      "was": "The one real blocker left is economic, not technical: the correctness bond (live-bond-status.json, keys/ above) is currently unfunded.",
+      "now": "Bond funded, 10.789999 USDC observed on-chain; custody classification and the absence of a payout SLA stated in the same paragraph.",
+      "class": "stale status in the repository's front door",
+      "evidence": "The bond was funded 2026-09-09 and the human terms said so; the README kept telling every reader it was unfunded. Found in the same 2026-09-11 self-audit."
+    }
+  ],
+  "checked_and_not_defects": [
+    "manifest/manifest.sha256 matched manifest.json exactly at tag v1 (163dcbcc48be37cfa37466eff990d9ebcb313e26a573b25a054ad6ef1fa14bde). The manifest was internally sealed; its CONTENTS were stale.",
+    "The private copy at still-os-consciousness/docs/x402-2887/manifest/manifest.json was byte-identical to the published one. The two manifest locations had not diverged.",
+    "The published implementation/bond/*.cjs at tag v1 were byte-identical to the live /home/marcus/core copies. The publication itself was faithful — what it was published ALONGSIDE was wrong.",
+    "2 of the 5 manifest file checksums (verdict_dispute.cjs, keyring.cjs) were still accurate against live code.",
+    "The implementation pin in the human terms had already been correctly repointed to the tag on 2026-09-10. The unfetchable local SHA survived only in the manifest and the Parties table.",
+    "The dispute guards ForeSeal would exercise — claim_sha256 hash binding, settles_against mutation guard, INDETERMINATE on unreachable source, deterministic dedup — were all present, correct, and unchanged.",
+    "notary_bond_slash.cjs --record-external already verified a real on-chain USDC Transfer from the bond wallet to the disputant before recording a payout. That rail was sound and is unchanged."
+  ],
+  "unchanged_by_this_supersession": [
+    "Signing identity and key rotation semantics (fingerprint 21de066900082465, keyring registry).",
+    "Receipt format and the frozen digest contract in docs/STILLOS_NOTARY_RECEIPT_V1.md.",
+    "The 1 positive + 6 negative offline vectors and verify-offline-pinned.js.",
+    "The resolver set, the reference source, the fee schedule, and the $2.00 combined hard stop.",
+    "The 48-hour dispute window."
+  ],
+  "supersession_hash": "f20fa41faa8a46bdc252c3658a1369432e45b1977ba48b973aea8d0e5a81fa92",
+  "supersession_hash_method": "sha256 over this document with supersession_hash set to the empty string, serialized as JSON.stringify(obj, null, 2) + '\\n'"
+}
