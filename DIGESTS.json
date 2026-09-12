@@ -1,0 +1,113 @@
+{
+  "digests_version": "STILLOS_NOTARY_KIT_DIGESTS_V1",
+  "algorithm": "sha256",
+  "set_digest": "18ae9e9e2ebf8980cff7ba645e83c082aa27bfd68eb6c714eed7d0270db10c93",
+  "set_digest_preimage": "sha256 over the concatenation of \"<path>  <sha256>\\n\" lines, in the order listed under files, UTF-8",
+  "file_count": 23,
+  "files": {
+    "implementation/bond/notary_bond.cjs": {
+      "sha256": "15b1727ff82b1c3614de5d26d096b0623b889d9a631b5f8de2f14a836f2d69c9",
+      "bytes": 19534
+    },
+    "implementation/bond/notary_bond_slash.cjs": {
+      "sha256": "fc7d1c6d078aae894623a6569632c2256cce5a7828460353e9c20179f4198279",
+      "bytes": 11140
+    },
+    "implementation/bond/notary_bond_mirror_refresh.cjs": {
+      "sha256": "219278cdcd3679b5a55638199fd5858aa82c32511bb7539f962098eef132f728",
+      "bytes": 1177
+    },
+    "implementation/bond/bond_monitor.cjs": {
+      "sha256": "aa40dfde548187d24869355366301dd0e3e772f12afd1799667cdd423104e7bd",
+      "bytes": 2592
+    },
+    "implementation/bond/slash_obligations.cjs": {
+      "sha256": "b91bf15812f8532dcd72325de4ae0cdcf8b2260c7875e6cba052ee9cb97087cd",
+      "bytes": 11113
+    },
+    "implementation/bond/verdict_dispute.cjs": {
+      "sha256": "1cd638de82ff166bbde4b838ee55acae5c4c6d07aecf90394c93f4ea01559057",
+      "bytes": 18022
+    },
+    "verify-offline-pinned.js": {
+      "sha256": "dcfb3d03d9190eacc5475f94334cc37aaca7972e2a35e34a0d98dd5300870ff6",
+      "bytes": 4097
+    },
+    "verify-live.js": {
+      "sha256": "64cfce0b583ea658711f4d5ebb8448be2afa427e7f551940c0ca733f0fa4317c",
+      "bytes": 4462
+    },
+    "vectors/positive-01.json": {
+      "sha256": "b2978ebd2cc63197cf500ece24b938794c55c2b63a27e854489b60ebf37f854f",
+      "bytes": 1095
+    },
+    "vectors/negative-01-content-mutation.json": {
+      "sha256": "457c0afd473964703377002f5897bdaef318df414bc2539312bdec13ba821769",
+      "bytes": 1160
+    },
+    "vectors/negative-02-digest-mutation.json": {
+      "sha256": "35f111e98da2902bb04ebd542c873fd8b5dc924304579e0a67efb38a8eced5c1",
+      "bytes": 1160
+    },
+    "vectors/negative-03-signature-mutation.json": {
+      "sha256": "8ec392530ae51da167ea2cd081335f176e0f67be5e3785833e67ffd1c6241dbc",
+      "bytes": 1160
+    },
+    "vectors/negative-04-wrong-signing-key.json": {
+      "sha256": "9f992b4dfbb32f0f624c7bbe245654be47effca34b17395662db0b4aa5b748c6",
+      "bytes": 1160
+    },
+    "vectors/negative-05-chain-link-mismatch.json": {
+      "sha256": "fba626ff239f146d0b9df6f7f7ce722ad5f6c26f517c4415a00f317f1560e361",
+      "bytes": 1160
+    },
+    "vectors/negative-06-unknown-key-version.json": {
+      "sha256": "61dc8d0d82e9b805f8a4d53360d7e99bc6ffd593f5c33506fe77add1dd9b414a",
+      "bytes": 1160
+    },
+    "conformance/run-all.js": {
+      "sha256": "3cb741655f2f687578d1e64dbe37f1c09bc08d0abaf5f5c94a3fcb6f1b5514fb",
+      "bytes": 1695
+    },
+    "conformance/run-record.js": {
+      "sha256": "54bc69ba2e9d965eef03fbbdae4656cd57d2262f8c8ca93ab4eb6f50e1b8a49a",
+      "bytes": 9915
+    },
+    "conformance/stillos_adapter.js": {
+      "sha256": "a4872137c7283defe3fe610455d5e48a5a5188e22a72ad48066f0f7ae8c6951f",
+      "bytes": 4935
+    },
+    "conformance/record-vectors.json": {
+      "sha256": "46bbfb363c16bce6bf5db7fc83da5230e9885e94422242402d7017c25168a1f4",
+      "bytes": 12293
+    },
+    "tools/check-consistency.cjs": {
+      "sha256": "3220943034e2b6055752a235b75fb0b91bc35ba14aaf42d52c02ba747e6aed4f",
+      "bytes": 8768
+    },
+    "tools/test-slash-obligations.cjs": {
+      "sha256": "f0918392570552b3fbf8cc85a16df37016fb39bfbe8893566626299cefc6be0d",
+      "bytes": 6817
+    },
+    "tools/verify-digests.cjs": {
+      "sha256": "0ce3ecf5071439653c0fbeba08c701599f9688d34ee6fb67d9f33b61b10b8a59",
+      "bytes": 2502
+    },
+    "tools/check-published-sync.cjs": {
+      "sha256": "f3d9bb94b997982f6a01e3e227d6ca23fbed63e779e8d705d6fcece9f65f9695",
+      "bytes": 4178
+    }
+  },
+  "how_to_verify": [
+    "git clone --branch <tag> --depth 1 https://github.com/stillmarcus24/notary-x402-reference-kit",
+    "node tools/verify-digests.cjs      # recomputes every entry and the set digest",
+    "or by hand: sha256sum implementation/bond/*.cjs  and compare"
+  ],
+  "what_this_proves": "The files you cloned are byte-for-byte the files whose digests were committed under this tag. Tampering in transit, a rewritten tag, or an edited file all fail this check.",
+  "what_this_does_not_prove": "That these bytes are the bytes the live notary process executes. That remains an operator attestation (manifest.parties.stillos.deployment_status.published_matches_running) and is NOT independently verifiable from this file alone. It becomes verifiable only when the live service serves these same digests from its own process; see live_attestation.",
+  "live_attestation": {
+    "status": "NOT_YET_SERVED",
+    "intended_endpoint": "GET /notary/bond -> implementation_digests",
+    "note": "Until this is live, an outsider can verify the kit against itself but must still trust us on published-equals-running. Recorded as an open gap rather than omitted."
+  }
+}

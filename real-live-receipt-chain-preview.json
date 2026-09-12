@@ -1,7 +1,7 @@
 {
   "notary_fingerprint": "921e3af51250a1f5",
   "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsFIB67A7w7j7oLHjuJeErxMpq2VTZyUXD2785nbgqMM=\n-----END PUBLIC KEY-----\n",
-  "how_to_verify": "Recompute each receipt_hash = SHA256(JSON.stringify({agent,claim_sha256,ts,prev_hash,notary_fp,resolver_hash?})) in that key order, check it matches, check prev_hash chains to the prior receipt_hash in order, and verify the signature against public_key.",
+  "how_to_verify": "Recompute each receipt_hash = SHA256(JSON.stringify({agent,claim_sha256,ts,prev_hash,notary_fp,resolver_hash?})) in that key order, check it matches, check prev_hash chains to the prior receipt_hash in order, and verify the Ed25519 signature (over the ASCII/UTF-8 bytes of the receipt_hash hex string -- not the raw digest bytes, not the canonical JSON) against the public key whose fingerprint matches the receipt notary_fp in /notary/keyring, so a key rotation never invalidates an earlier receipt.",
   "exported_at": "2026-07-20T12:59:32.849Z",
   "receipts": [
     {
