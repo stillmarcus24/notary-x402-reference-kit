@@ -28,7 +28,7 @@
       "release_tag": "foreseal-bilateral-v1.1",
       "file_checksums_sha256": {
         "_note": "Paths are relative to this repository and are publicly fetchable. At tag foreseal-bilateral-v1 this block instead listed paths under /home/marcus/core with a commit SHA (b2efdea85d89aa2849441f44a19c65b3a2db717e) in a local repository that has no remote — GET /repos/.../commits/b2efdea… returns HTTP 422 'No commit found for SHA'. That is the same unfetchable-pin defect ForeSeal identified on 2026-09-10, still present inside the canonical manifest after the human document was corrected. Three of the five checksums were also stale against the live code they named.",
-        "implementation/bond/notary_bond.cjs": "15b1727ff82b1c3614de5d26d096b0623b889d9a631b5f8de2f14a836f2d69c9",
+        "implementation/bond/notary_bond.cjs": "7cfd71217a03326ca939afca19eb3ce1e755999ef709b133035eaf26ad3dead6",
         "implementation/bond/notary_bond_slash.cjs": "fc7d1c6d078aae894623a6569632c2256cce5a7828460353e9c20179f4198279",
         "implementation/bond/verdict_dispute.cjs": "1cd638de82ff166bbde4b838ee55acae5c4c6d07aecf90394c93f4ea01559057",
         "implementation/bond/slash_obligations.cjs": "b91bf15812f8532dcd72325de4ae0cdcf8b2260c7875e6cba052ee9cb97087cd",
@@ -37,7 +37,7 @@
         "verify-offline-pinned.js": "dcfb3d03d9190eacc5475f94334cc37aaca7972e2a35e34a0d98dd5300870ff6"
       },
       "deployment_status": {
-        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-11T17:04:59.168Z)",
+        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-12T16:34:47.529Z)",
         "note": "Whether the code published above is byte-identical to what the live notary process is running. Stated explicitly because a published implementation that differs from the deployed one is a provenance claim that fails exactly where it matters."
       },
       "public_base_url": "https://stillosdigitalholdings.com/notary"

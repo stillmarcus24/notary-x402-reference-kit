@@ -6,7 +6,7 @@
 - Version: `foreseal-stillos-interop-v1.1` (supersedes `foreseal-stillos-interop-v1`)
 - Status: **TERMS_FROZEN — TEST NOT YET EXECUTED**
 - Release tag: `foreseal-bilateral-v1.1` — resolve with `git rev-list -n1 foreseal-bilateral-v1.1  — or GET https://api.github.com/repos/stillmarcus24/notary-x402-reference-kit/tags`
-- Canonical manifest SHA-256: `f2eec1be7cd3dff1bc76937c56b7d639d05a1f149dd479c2157d634ef091bae0`
+- Canonical manifest SHA-256: `be931dea0014446aa92571e9917522da8c5bda27f7ed82df5d598b3120fbe5d4`
 
 ## Tag immutability
 
@@ -81,11 +81,11 @@ Whether the absence of a payout SLA makes ForeSeal's Precondition 1 unsatisfied 
 
 ## Published implementation
 
-Deployment status: YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-11T17:04:59.168Z)
+Deployment status: YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-12T16:34:47.529Z)
 
 | File | SHA-256 |
 |---|---|
-| `implementation/bond/notary_bond.cjs` | `15b1727ff82b1c3614de5d26d096b0623b889d9a631b5f8de2f14a836f2d69c9` |
+| `implementation/bond/notary_bond.cjs` | `7cfd71217a03326ca939afca19eb3ce1e755999ef709b133035eaf26ad3dead6` |
 | `implementation/bond/notary_bond_slash.cjs` | `fc7d1c6d078aae894623a6569632c2256cce5a7828460353e9c20179f4198279` |
 | `implementation/bond/verdict_dispute.cjs` | `1cd638de82ff166bbde4b838ee55acae5c4c6d07aecf90394c93f4ea01559057` |
 | `implementation/bond/slash_obligations.cjs` | `b91bf15812f8532dcd72325de4ae0cdcf8b2260c7875e6cba052ee9cb97087cd` |

@@ -37,10 +37,31 @@ case "${1:-}" in
 esac
 
 echo "==> gate: every check must pass before anything is published"
-( cd "$SRC" && node tools/verify-digests.cjs        >/dev/null ) && echo "    digests        ok"
-( cd "$SRC" && node tools/check-consistency.cjs     >/dev/null ) && echo "    consistency    ok"
-( cd "$SRC" && node tools/test-slash-obligations.cjs >/dev/null ) && echo "    obligations    ok"
-( cd "$SRC/conformance" && node run-all.js          >/dev/null ) && echo "    conformance    ok"
+# Each check MUST abort the publish on failure. The previous form was
+#   ( cmd >/dev/null ) && echo "    name ok"
+# which does not abort under `set -e`: bash exempts a failing left-hand side of an
+# && list from errexit, so a failing check merely skipped its own "ok" line and
+# publishing continued. Found 2026-09-12 the hard way — check-consistency.cjs was
+# failing on a stale manifest checksum and this gate published anyway, printing 3
+# "ok" lines instead of 4. A gate whose failure mode is a MISSING line is not a
+# gate. Explicit if/else + exit, and the check's own output is shown on failure
+# instead of being swallowed by >/dev/null.
+run_gate() {
+  local name="$1"; shift
+  local dir="$1"; shift
+  local out status
+  out="$( cd "$dir" && "$@" 2>&1 )" && status=0 || status=$?
+  if [ "$status" -ne 0 ]; then
+    echo "    $name FAILED (exit $status) — nothing published"
+    echo "$out" | sed 's/^/      /'
+    exit "$status"
+  fi
+  echo "    $name ok"
+}
+run_gate "digests    " "$SRC"            node tools/verify-digests.cjs
+run_gate "consistency" "$SRC"            node tools/check-consistency.cjs
+run_gate "obligations" "$SRC"            node tools/test-slash-obligations.cjs
+run_gate "conformance" "$SRC/conformance" node run-all.js
 
 echo "==> cloning $REPO"
 git clone -q "$REPO" "$WORK/kit"
