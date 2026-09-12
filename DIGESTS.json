@@ -1,13 +1,15 @@
 {
   "digests_version": "STILLOS_NOTARY_KIT_DIGESTS_V1",
   "algorithm": "sha256",
-  "set_digest": "18ae9e9e2ebf8980cff7ba645e83c082aa27bfd68eb6c714eed7d0270db10c93",
+  "set_digest": "a5c652ad768f17ac5b043ed8b4e317808b473c79329d72979d456d2e90ae6fef",
+  "bond_set_digest": "b7be51aafd82db88444fc3d09c5a46bbcd3b885c074caa1a309a516bf3efc19d",
+  "bond_set_digest_preimage": "sha256 over \"<basename>  <sha256>\\n\" lines for implementation/bond/*.cjs, sorted by basename, UTF-8 — compare to GET /notary/bond implementation_digests.bond_set_digest",
   "set_digest_preimage": "sha256 over the concatenation of \"<path>  <sha256>\\n\" lines, in the order listed under files, UTF-8",
   "file_count": 23,
   "files": {
     "implementation/bond/notary_bond.cjs": {
-      "sha256": "15b1727ff82b1c3614de5d26d096b0623b889d9a631b5f8de2f14a836f2d69c9",
-      "bytes": 19534
+      "sha256": "7cfd71217a03326ca939afca19eb3ce1e755999ef709b133035eaf26ad3dead6",
+      "bytes": 26347
     },
     "implementation/bond/notary_bond_slash.cjs": {
       "sha256": "fc7d1c6d078aae894623a6569632c2256cce5a7828460353e9c20179f4198279",
@@ -106,8 +108,11 @@
   "what_this_proves": "The files you cloned are byte-for-byte the files whose digests were committed under this tag. Tampering in transit, a rewritten tag, or an edited file all fail this check.",
   "what_this_does_not_prove": "That these bytes are the bytes the live notary process executes. That remains an operator attestation (manifest.parties.stillos.deployment_status.published_matches_running) and is NOT independently verifiable from this file alone. It becomes verifiable only when the live service serves these same digests from its own process; see live_attestation.",
   "live_attestation": {
-    "status": "NOT_YET_SERVED",
-    "intended_endpoint": "GET /notary/bond -> implementation_digests",
-    "note": "Until this is live, an outsider can verify the kit against itself but must still trust us on published-equals-running. Recorded as an open gap rather than omitted."
+    "status": "SERVED",
+    "endpoint": "https://stillosdigitalholdings.com/notary/bond",
+    "field": "implementation_digests.bond_set_digest",
+    "compare_to": "bond_set_digest in this file",
+    "signed": "Yes — implementation_digests is inside the bond status object covered by attestation_hash and its Ed25519 signature, verifiable against the same notary public key that signs receipts.",
+    "note": "Served live 2026-09-12. Equal digests mean the published bond implementation is the one the live service runs, established by recomputation rather than by operator attestation. Does NOT prove the loaded process image matches the on-disk bytes."
   }
 }

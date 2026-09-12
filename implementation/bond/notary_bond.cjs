@@ -124,6 +124,123 @@ function bondRef() {
     status: cfg.status_endpoint };
 }
 
+// --- Implementation digests: closes the published-equals-running gap ----------
+//
+// WHY (2026-09-12): the reference kit asserted, in manifest.parties.stillos
+// .deployment_status, that "all 6 published bond files are byte-identical to
+// /home/marcus/core". That claim was TRUE and entirely unverifiable by anyone
+// but us — it named a private path and a timestamp, so an auditor could only
+// trust it. Publishing DIGESTS.json in the kit closed half the gap (a cloner can
+// prove clone == committed) and explicitly recorded the other half as open:
+// nothing proved committed == RUNNING.
+//
+// This closes it. The live process hashes its OWN bond sources at request time
+// and serves them, signed under the same Ed25519 attestation as the rest of the
+// bond status. A third party compares these digests to implementation/bond/*
+// in the published DIGESTS.json. Match => the code we publish is the code we
+// run, established by recomputation rather than by our say-so.
+//
+// Honest boundary, kept in the payload: this proves the files on disk that this
+// module hashes are those bytes. It does not prove the loaded process image was
+// never patched in memory. That is a strictly weaker threat model than "the
+// operator quietly published different code", which is the one that mattered.
+const BOND_IMPL_FILES = [
+  'bond_monitor.cjs',
+  'notary_bond.cjs',
+  'notary_bond_mirror_refresh.cjs',
+  'notary_bond_slash.cjs',
+  'slash_obligations.cjs',
+  'verdict_dispute.cjs',
+];
+const BOND_IMPL_DIR = '/home/marcus/core';
+let _implCache = null;
+
+function implementationDigests() {
+  // Cheap mtime+size key so a public endpoint is not re-hashing on every hit,
+  // while an actual code change is picked up on the next request.
+  const stamp = BOND_IMPL_FILES.map(f => {
+    try { const s = fs.statSync(path.join(BOND_IMPL_DIR, f)); return `${f}:${s.mtimeMs}:${s.size}`; }
+    catch { return `${f}:missing`; }
+  }).join('|');
+  if (_implCache && _implCache.stamp === stamp) return _implCache.value;
+
+  const files = {};
+  for (const f of BOND_IMPL_FILES) {
+    try {
+      const buf = fs.readFileSync(path.join(BOND_IMPL_DIR, f));
+      files[f] = { sha256: sha256(buf), bytes: buf.length };
+    } catch { files[f] = { sha256: null, bytes: null, error: 'unreadable' }; }
+  }
+  // Same preimage shape as the kit's gen-digests.cjs, so the two are directly
+  // comparable and reproducible by hand with sha256sum.
+  const lines = BOND_IMPL_FILES.map(f => `${f}  ${files[f].sha256}`).join('\n') + '\n';
+  const value = {
+    digests_version: 'STILLOS_NOTARY_BOND_IMPL_DIGESTS_V1',
+    algorithm: 'sha256',
+    computed_at_runtime: true,
+    source_dir_is_private: true,
+    files,
+    bond_set_digest: sha256(Buffer.from(lines, 'utf8')),
+    bond_set_digest_preimage: 'sha256 over "<basename>  <sha256>\\n" lines, files sorted by basename, UTF-8',
+    published_counterpart: 'https://github.com/stillmarcus24/notary-x402-reference-kit/blob/main/DIGESTS.json',
+    how_to_verify:
+      'Clone the reference kit, run `node tools/verify-digests.cjs` (proves your clone matches what we committed), then compare bond_set_digest here to the bond_set_digest in that DIGESTS.json. Equal => the published bond implementation is the one this live service is running.',
+    what_this_does_not_prove:
+      'That the loaded process image matches these on-disk bytes. This closes the operator-published-different-code gap, not an in-memory tampering one.',
+  };
+  _implCache = { stamp, value };
+  return value;
+}
+
+// The notary is fronted by more than one public domain. Domain-bearing fields
+// used to be signed with the config's hardcoded origin and then string-rewritten
+// downstream by notary_domain_rewrite_proxy.cjs -- AFTER signing. That left every
+// caller on the rewritten domain holding a payload whose attestation_hash could
+// not be recomputed (found 2026-09-12: signature valid, hash mismatch, so the
+// bond's own `verify` instruction failed for every external auditor). Fix: the
+// origin resolves the public origin from the request and signs THAT, so the
+// served bytes are the signed bytes and no downstream mutation is needed.
+const ALLOWED_PUBLIC_ORIGINS = [
+  'https://stillosdigitalholdings.com',
+  'https://nolawealthfinancial.com',
+];
+function resolvePublicOrigin(req) {
+  const hdr = (h) => (req && req.headers && req.headers[h]) || '';
+  const explicit = String(hdr('x-stillos-public-origin')).trim();
+  if (ALLOWED_PUBLIC_ORIGINS.includes(explicit)) return explicit;
+  const host = String(hdr('x-forwarded-host') || hdr('host')).split(',')[0].trim().toLowerCase();
+  if (host) {
+    const match = ALLOWED_PUBLIC_ORIGINS.find((o) => o === `https://${host}`);
+    if (match) return match;
+  }
+  return null; // unknown/absent -> keep config values verbatim, sign those
+}
+// Re-point every domain-bearing string in the status onto the resolved public
+// origin before hashing. Only rewrites origins we already serve; never invents one.
+function applyPublicOrigin(obj, origin) {
+  if (!origin) return obj;
+  const others = ALLOWED_PUBLIC_ORIGINS.filter((o) => o !== origin);
+  const walk = (v) => {
+    if (typeof v === 'string') {
+      let s = v;
+      for (const o of others) {
+        // Only plain https:// origins. did:web:<domain> has no https:// prefix and
+        // is the notary's stable cryptographic identity -- it must never move.
+        s = s.split(o).join(origin);
+      }
+      return s;
+    }
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === 'object') {
+      const out = {};
+      for (const k of Object.keys(v)) out[k] = walk(v[k]);
+      return out;
+    }
+    return v;
+  };
+  return walk(obj);
+}
+
 // Full live status: on-chain balance, active flag, terms, slash history.
 async function getStatus() {
   const cfg = loadConfig();
@@ -167,6 +284,7 @@ async function getStatus() {
         bond_current: (bal.usd >= cfg.bonded_usd) && ob.obligation_ledger_intact && ob.overdue_slash_obligations === 0,
       };
     })(),
+    implementation_digests: implementationDigests(),
     policy_hash: policyHash(cfg),
     slash_policy: cfg.slash_policy,
     mechanism: cfg.mechanism,
@@ -180,14 +298,31 @@ async function getStatus() {
 // Ed25519-signed status, using the same notary key that signs receipts, so an
 // agent can verify the bond attestation against the same public key it already
 // trusts for receipts. Signature is over sha256 of the canonical status.
-async function getSignedStatus() {
-  const status = await getStatus();
+// Envelope fields are added AFTER the hash is computed, so a verifier must strip
+// exactly these to rebuild the preimage. Named explicitly (and published in the
+// `verify` string below) because the old instruction said only
+// "status-fields-in-order", which no outside auditor could reproduce without
+// guessing. Keep this list and the returned envelope in sync.
+const ATTESTATION_ENVELOPE_FIELDS = [
+  'notary_fp', 'public_key', 'attestation_hash', 'signature',
+  'verify', 'attestation_envelope_fields',
+];
+async function getSignedStatus(req) {
+  const origin = resolvePublicOrigin(req);
+  const status = applyPublicOrigin(await getStatus(), origin);
   const signer = require('/home/marcus/core/notary_recovery_signer.cjs');
   const { privateKey, publicKeyPem, notary_fp } = signer.loadPrivateKey();
   const attestation_hash = sha256(JSON.stringify(status));
   const signature = crypto.sign(null, Buffer.from(attestation_hash), privateKey).toString('base64');
   return { ...status, notary_fp, public_key: publicKeyPem, attestation_hash, signature,
-    verify: 'Recompute attestation_hash = SHA256(JSON.stringify(status-fields-in-order)); verify Ed25519 signature against public_key; independently confirm onchain_balance_usd via USDC.balanceOf on Base.' };
+    attestation_envelope_fields: ATTESTATION_ENVELOPE_FIELDS,
+    verify: 'Recompute: take this JSON object, delete exactly the keys listed in '
+      + 'attestation_envelope_fields, and preserve the order of every remaining key as '
+      + 'served. attestation_hash = SHA256(UTF-8 of JSON.stringify(that object)). Then verify '
+      + 'the Ed25519 signature: it is over the ASCII of the attestation_hash hex string (not '
+      + 'over the raw bytes), against public_key. Then independently confirm onchain_balance_usd '
+      + 'via USDC.balanceOf(wallet) on Base. Every URL in this payload is signed as served — if '
+      + 'any intermediary rewrote a domain, the recomputed hash will not match, by design.' };
 }
 
 // Record a slash payout (called by the governed slash-execution command AFTER an

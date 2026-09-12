@@ -76,10 +76,24 @@ if (missing.length) {
 const lines = Object.keys(files).map(k => `${k}  ${files[k].sha256}`).join('\n') + '\n';
 const setDigest = sha256(Buffer.from(lines, 'utf8'));
 
+// Bond-subset digest, computed over BASENAMES sorted, to be directly comparable
+// with what the live notary serves at GET /notary/bond -> implementation_digests
+// .bond_set_digest. Equal values there and here means the published bond
+// implementation is the one the live service is actually running — the
+// published-equals-running gap, closed by recomputation instead of by our word.
+const bondFiles = Object.keys(files)
+  .filter(k => k.startsWith('implementation/bond/') && k.endsWith('.cjs'))
+  .map(k => [path.basename(k), files[k].sha256])
+  .sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0);
+const bondLines = bondFiles.map(([b, h]) => `${b}  ${h}`).join('\n') + '\n';
+const bondSetDigest = sha256(Buffer.from(bondLines, 'utf8'));
+
 const out = {
   digests_version: 'STILLOS_NOTARY_KIT_DIGESTS_V1',
   algorithm: 'sha256',
   set_digest: setDigest,
+  bond_set_digest: bondSetDigest,
+  bond_set_digest_preimage: 'sha256 over "<basename>  <sha256>\\n" lines for implementation/bond/*.cjs, sorted by basename, UTF-8 — compare to GET /notary/bond implementation_digests.bond_set_digest',
   set_digest_preimage: 'sha256 over the concatenation of "<path>  <sha256>\\n" lines, in the order listed under files, UTF-8',
   file_count: Object.keys(files).length,
   files,
@@ -93,9 +107,12 @@ const out = {
   what_this_does_not_prove:
     'That these bytes are the bytes the live notary process executes. That remains an operator attestation (manifest.parties.stillos.deployment_status.published_matches_running) and is NOT independently verifiable from this file alone. It becomes verifiable only when the live service serves these same digests from its own process; see live_attestation.',
   live_attestation: {
-    status: 'NOT_YET_SERVED',
-    intended_endpoint: 'GET /notary/bond -> implementation_digests',
-    note: 'Until this is live, an outsider can verify the kit against itself but must still trust us on published-equals-running. Recorded as an open gap rather than omitted.',
+    status: 'SERVED',
+    endpoint: 'https://stillosdigitalholdings.com/notary/bond',
+    field: 'implementation_digests.bond_set_digest',
+    compare_to: 'bond_set_digest in this file',
+    signed: 'Yes — implementation_digests is inside the bond status object covered by attestation_hash and its Ed25519 signature, verifiable against the same notary public key that signs receipts.',
+    note: 'Served live 2026-09-12. Equal digests mean the published bond implementation is the one the live service runs, established by recomputation rather than by operator attestation. Does NOT prove the loaded process image matches the on-disk bytes.',
   },
 };
 
