@@ -41,49 +41,104 @@ function resolveKey(fingerprint) {
 // called 175 valid receipts broken.
 //
 // Field order is normative and is insertion order, not sorted order.
-const OPTIONAL_ORDERED = [
+// ---- PROFILE v1, FROZEN 2026-09-13. Never edit. --------------------------------
+//
+// v1 receipts carry no version field, so "is this v1?" is decided by the field set
+// alone. That makes the set normative and closed: v1 can never grow another field,
+// because a verifier could not tell a legitimately-grown v1 from a tampered one.
+// Future shapes MUST declare `receipt_schema_version`; see PROFILE_REGISTRY below.
+const V1_PREIMAGE_BASE = ['agent', 'claim_sha256', 'ts', 'prev_hash', 'notary_fp'];
+const V1_PREIMAGE_OPTIONAL = [
   ['resolver_hash'],
   ['reasoning_trace_hash'],
   ['drand_round', 'drand_randomness'],
 ];
-const BASE_FIELDS = ['agent', 'claim_sha256', 'ts', 'prev_hash', 'notary_fp'];
-// Envelope fields that are carried alongside the receipt but are NOT in the preimage.
-const NON_PREIMAGE = new Set(['receipt_hash', 'signature', 'verify', 'id', 'claim', 'url', 'verdict']);
+// Carried alongside the receipt and NOT covered by the hash or the signature.
+// Enumerated from the real 2,895-receipt book, not guessed.
+const V1_UNCOMMITTED = [
+  'receipt_hash', 'signature', 'verify',
+  'actor_class', 'classification_reason', 'confidence', 'source_ip_hash',
+  'attestation_type', 'authoritative', 'proves',
+  'user_agent_hash', 'api_key_hash', 'auth_account_id', 'stripe_customer_id',
+  'internal_match_rule', 'resolver_id',
+];
+const V1_CLOSED = new Set([...V1_PREIMAGE_BASE, ...V1_PREIMAGE_OPTIONAL.flat(), ...V1_UNCOMMITTED]);
+
+const PROFILE_REGISTRY = { 1: 'v1-frozen' }; // v2+ profiles get added here, never inferred
 
 function preimage(r) {
   const core = {};
-  for (const f of BASE_FIELDS) core[f] = r[f];
-  for (const group of OPTIONAL_ORDERED) {
+  for (const f of V1_PREIMAGE_BASE) core[f] = r[f];
+  for (const group of V1_PREIMAGE_OPTIONAL) {
     if (r[group[0]]) for (const f of group) core[f] = r[f];
   }
   return JSON.stringify(core);
 }
 
-// Fields we have never heard of mean we cannot claim to have reconstructed the
-// preimage. That is an UNKNOWN, and an unknown must not be reported as a refutation
-// -- the same rule the conformance suite enforces as rec-13 and the anchor replay
-// enforces on an unreachable RPC. A verifier that collapses "I don't know this
-// schema" into "this receipt is broken" manufactures false negatives against
-// authentic evidence, and the victim has no way to tell the two apart.
-function unknownFields(r) {
-  const known = new Set([...BASE_FIELDS, ...OPTIONAL_ORDERED.flat(), ...NON_PREIMAGE]);
-  return Object.keys(r).filter(k => !known.has(k));
-}
-
+/*
+ * ---------------------------------------------------------------------------
+ * WHY THE CLASSIFICATION IS SHAPED LIKE THIS
+ *
+ * "Unknown is not a refutation" is right, and the first implementation of it here
+ * was a forgery laundromat. It read: if the hash mismatches AND any unrecognized
+ * field is present, return null (unsupported schema). Measured by
+ * conformance/schema-downgrade-attack.js on 2026-09-13, that failed four ways:
+ *
+ *   A2  mutate claim_sha256              -> UNSUPPORTED_SCHEMA, should be INVALID
+ *   A3  mutate claim_sha256 + add field  -> UNSUPPORTED_SCHEMA, should be INVALID
+ *   A4  add a field, mutate nothing      -> INTACT, should not be "fully verified"
+ *   A5  legacy shape + extra field       -> INTACT, same
+ *
+ * A2 is the worst: real receipts carry ~20 envelope fields, the original
+ * NON_PREIMAGE list named 7, so unknownFields() was non-empty for essentially every
+ * real receipt — every tampered receipt in the book laundered itself to
+ * "indeterminate" with no attacker effort at all.
+ *
+ * The fix is not a longer list of known fields. It is refusing to INFER a profile:
+ *
+ *   declared version, unknown to us  -> UNSUPPORTED_SCHEMA (a real unknown)
+ *   no declared version              -> it is claiming to be v1, and v1 is FROZEN
+ *       preimage mismatch            -> INVALID       (v1 cannot have grown)
+ *       preimage match + extra field -> UNSUPPORTED_SCHEMA (core is right, but the
+ *                                       object is not a pure v1 receipt, so it must
+ *                                       not be reported as fully verified)
+ *       preimage match, no extras    -> INTACT
+ *
+ * This is why explicit versioning is a security control and not housekeeping: it is
+ * the only thing that lets a verifier tell "newer than me" from "tampered", without
+ * which one of the two answers is always wrong.
+ * ---------------------------------------------------------------------------
+ */
 function verifyReceipt(r) {
   const result = { checks: {} };
-  const recomputed = crypto.createHash('sha256').update(preimage(r)).digest('hex');
-  const unknown = unknownFields(r);
-  if (recomputed === r.receipt_hash) {
-    result.checks.hash_intact = true;
-  } else if (unknown.length) {
-    // Cannot reconstruct: this receipt carries a schema newer than this script.
+
+  const declared = r.receipt_schema_version;
+  if (declared !== undefined && !PROFILE_REGISTRY[declared]) {
     result.checks.hash_intact = null;
-    result.checks.schema = 'unrecognized';
-    result.unrecognized_fields = unknown;
+    result.checks.schema = 'unsupported_version';
+    result.declared_version = declared;
   } else {
-    result.checks.hash_intact = false;
+    const recomputed = crypto.createHash('sha256').update(preimage(r)).digest('hex');
+    const extras = Object.keys(r).filter(k => !V1_CLOSED.has(k) && k !== 'receipt_schema_version');
+    if (recomputed !== r.receipt_hash) {
+      // v1 is frozen: a mismatch is a mismatch. Extra fields cannot excuse it.
+      result.checks.hash_intact = false;
+    } else if (extras.length) {
+      result.checks.hash_intact = null;
+      result.checks.schema = 'unrecognized_fields_outside_frozen_v1';
+      result.unrecognized_fields = extras;
+    } else {
+      result.checks.hash_intact = true;
+    }
   }
+
+  // Surfaced on every result, intact or not. 2,789 receipts in the real book carry
+  // actor_class/classification_reason/confidence and 379 carry
+  // stripe_customer_id/auth_account_id — none of it covered by the hash or the
+  // signature. A consumer reading those off a receipt this tool called "verified"
+  // is trusting uncommitted data. Saying so is the verifier's job.
+  result.uncommitted_fields_present = Object.keys(r)
+    .filter(k => V1_UNCOMMITTED.includes(k) && !['receipt_hash', 'signature', 'verify'].includes(k));
 
   const pubKeyPem = resolveKey(r.notary_fp);
   result.checks.key_known = pubKeyPem !== null;

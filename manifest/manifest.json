@@ -34,7 +34,7 @@
         "implementation/bond/slash_obligations.cjs": "b91bf15812f8532dcd72325de4ae0cdcf8b2260c7875e6cba052ee9cb97087cd",
         "implementation/bond/bond_monitor.cjs": "aa40dfde548187d24869355366301dd0e3e772f12afd1799667cdd423104e7bd",
         "implementation/bond/notary_bond_mirror_refresh.cjs": "219278cdcd3679b5a55638199fd5858aa82c32511bb7539f962098eef132f728",
-        "verify-offline-pinned.js": "368e65ecd1d9a32829b192f2aa07d258f168b59130710f26be2f80508e9015e2"
+        "verify-offline-pinned.js": "55d3736288e50e3ddd9c099eb243cd6ae850f77d019fc41cdb8cb1cb175ee74b"
       },
       "deployment_status": {
         "published_matches_running": "NO — 5/6 match. Divergences: verdict_dispute.cjs: DIFFERS from /home/marcus/core/verdict_dispute.cjs",

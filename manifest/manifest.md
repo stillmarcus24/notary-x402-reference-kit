@@ -6,7 +6,7 @@
 - Version: `foreseal-stillos-interop-v1.1` (supersedes `foreseal-stillos-interop-v1`)
 - Status: **TERMS_FROZEN — TEST NOT YET EXECUTED**
 - Release tag: `foreseal-bilateral-v1.1` — resolve with `git rev-list -n1 foreseal-bilateral-v1.1  — or GET https://api.github.com/repos/stillmarcus24/notary-x402-reference-kit/tags`
-- Canonical manifest SHA-256: `adf5b86144a5419793256693c1fa965eb7dfa4dea7351e96aa8a98fd7d8820ed`
+- Canonical manifest SHA-256: `d69002bf75a393046ec8be7939dfa3b3153f68234f34a7fa2736413be1a23275`
 
 ## Tag immutability
 
@@ -91,4 +91,4 @@ Deployment status: NO — 5/6 match. Divergences: verdict_dispute.cjs: DIFFERS f
 | `implementation/bond/slash_obligations.cjs` | `b91bf15812f8532dcd72325de4ae0cdcf8b2260c7875e6cba052ee9cb97087cd` |
 | `implementation/bond/bond_monitor.cjs` | `aa40dfde548187d24869355366301dd0e3e772f12afd1799667cdd423104e7bd` |
 | `implementation/bond/notary_bond_mirror_refresh.cjs` | `219278cdcd3679b5a55638199fd5858aa82c32511bb7539f962098eef132f728` |
-| `verify-offline-pinned.js` | `368e65ecd1d9a32829b192f2aa07d258f168b59130710f26be2f80508e9015e2` |
+| `verify-offline-pinned.js` | `55d3736288e50e3ddd9c099eb243cd6ae850f77d019fc41cdb8cb1cb175ee74b` |
