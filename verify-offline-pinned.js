@@ -27,12 +27,63 @@ function resolveKey(fingerprint) {
   return entry ? entry.public_key_pem : null; // unknown fingerprint -> fail closed, never trust
 }
 
+// ---- preimage reconstruction -------------------------------------------------
+//
+// This MUST stay byte-identical to core/notary_service_marcus.cjs::receiptPreimage().
+// It did not, and the divergence was invisible for exactly the reason divergences
+// always are: each implementation was only ever run against receipts it happened to
+// handle. Measured 2026-09-13 over the real 2,892-receipt book, this file said
+// `hash_intact: false` on 177 receipts (6.1%) that the live service says are intact
+// and whose Ed25519 signature verifies against the pinned key. They were the
+// 2026-07-03 drand-randomness receipts, whose preimage carries two extra fields this
+// file did not know about. The notary demonstrably signed them; only the
+// reconstruction disagreed. Same family as the key-rotation false negative that
+// called 175 valid receipts broken.
+//
+// Field order is normative and is insertion order, not sorted order.
+const OPTIONAL_ORDERED = [
+  ['resolver_hash'],
+  ['reasoning_trace_hash'],
+  ['drand_round', 'drand_randomness'],
+];
+const BASE_FIELDS = ['agent', 'claim_sha256', 'ts', 'prev_hash', 'notary_fp'];
+// Envelope fields that are carried alongside the receipt but are NOT in the preimage.
+const NON_PREIMAGE = new Set(['receipt_hash', 'signature', 'verify', 'id', 'claim', 'url', 'verdict']);
+
+function preimage(r) {
+  const core = {};
+  for (const f of BASE_FIELDS) core[f] = r[f];
+  for (const group of OPTIONAL_ORDERED) {
+    if (r[group[0]]) for (const f of group) core[f] = r[f];
+  }
+  return JSON.stringify(core);
+}
+
+// Fields we have never heard of mean we cannot claim to have reconstructed the
+// preimage. That is an UNKNOWN, and an unknown must not be reported as a refutation
+// -- the same rule the conformance suite enforces as rec-13 and the anchor replay
+// enforces on an unreachable RPC. A verifier that collapses "I don't know this
+// schema" into "this receipt is broken" manufactures false negatives against
+// authentic evidence, and the victim has no way to tell the two apart.
+function unknownFields(r) {
+  const known = new Set([...BASE_FIELDS, ...OPTIONAL_ORDERED.flat(), ...NON_PREIMAGE]);
+  return Object.keys(r).filter(k => !known.has(k));
+}
+
 function verifyReceipt(r) {
   const result = { checks: {} };
-  const core = { agent: r.agent, claim_sha256: r.claim_sha256, ts: r.ts, prev_hash: r.prev_hash, notary_fp: r.notary_fp };
-  if (r.resolver_hash) core.resolver_hash = r.resolver_hash;
-  const recomputed = crypto.createHash('sha256').update(JSON.stringify(core)).digest('hex');
-  result.checks.hash_intact = recomputed === r.receipt_hash;
+  const recomputed = crypto.createHash('sha256').update(preimage(r)).digest('hex');
+  const unknown = unknownFields(r);
+  if (recomputed === r.receipt_hash) {
+    result.checks.hash_intact = true;
+  } else if (unknown.length) {
+    // Cannot reconstruct: this receipt carries a schema newer than this script.
+    result.checks.hash_intact = null;
+    result.checks.schema = 'unrecognized';
+    result.unrecognized_fields = unknown;
+  } else {
+    result.checks.hash_intact = false;
+  }
 
   const pubKeyPem = resolveKey(r.notary_fp);
   result.checks.key_known = pubKeyPem !== null;

@@ -1,0 +1,6 @@
+{
+  "_why": "StillOS's REAL measured scores. run-all.js with no flags asserts these still hold, so an honest failing score is a regression gate rather than a publish blocker. Update only with a measurement, never to make a number look better.",
+  "_measured": "2026-09-13",
+  "digest triple (x402#3389)": "4/8",
+  "evidence record (x402#2887)": "16/22"
+}

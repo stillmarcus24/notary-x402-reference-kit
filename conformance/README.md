@@ -8,19 +8,76 @@ Two runnable suites for the open questions on
 
 ```sh
 node run-all.js                                        # both suites, bundled reference
-node run-all.js --record-adapter ./stillos_adapter.js  # both suites, StillOS's real implementation
-node run-record.js --adapter ./mine.js --verbose       # score yours
+node run-all.js --adapter ./mine.js                    # your file, both suites
+node run-all.js --record-adapter ./stillos_adapter.js  # StillOS's real implementation
+node run-record.js --adapter ./mine.js --verbose       # one suite, per-case output
 ```
 
-Exit `0` iff every assertion behaved as specified.
+Exit `0` iff every assertion behaved as specified. `2` = bad invocation. An adapter
+that does not export what a suite needs is reported `NOT RUN` for that suite — never
+silently replaced by the reference.
+
+## The harness had the bug the harness tests for
+
+Read this before trusting any score above, including ours.
+
+Until 2026-09-13, `run-all.js` parsed only `--record-adapter` and `--triple-adapter`
+and **silently ignored every other flag**. So `node run-all.js --adapter ./mine.js` —
+the obvious spelling, and the one we had written down for other implementers to run —
+loaded nothing, scored the **bundled reference**, printed `PASS 8/8` and `PASS 22/22`,
+and exited `0`. A stranger following our instructions would have received a perfect
+green scoreboard for code that was never opened.
+
+That is precisely the defect class these suites exist to catch: a result that is green
+for a reason unrelated to conformance, exactly like `triple-03` passing on an
+implementation that ignores `enc`. We shipped it in the tool doing the catching. It
+was found by running our own published instruction and noticing the adapter name never
+appeared in the output.
+
+The runner now fails closed: unknown flag → exit 2, missing adapter file → exit 2, a
+flag where a path belongs → exit 2, adapter missing required exports → `NOT RUN` and a
+non-zero exit. Eight invocations are checked. If you ran this suite before that date
+and got a green, **the green was ours, not yours** — please re-run it.
 
 ## Scoreboard
 
 | implementation | digest triple | evidence record | integrity | settlement |
 |---|---|---|---|---|
 | bundled reference | 8/8 | **22/22** | 14/14 | 8/8 |
-| **StillOS notary (ours)** | 8/8 | **16/22** | 14/14 | **2/8** |
+| **StillOS notary (ours)** | **4/8** | **16/22** | 14/14 | **2/8** |
 | integrity-only strawman | — | 15/22 | 14/14 | 1/8 |
+| naive triple strawman | 5/8 | — | — | — |
+
+### Correction, 2026-09-13: this table said StillOS scored 8/8 on the digest triple
+
+It does not. It scores **4/8** — worse than the naive strawman we wrote to demonstrate
+the suite catches something.
+
+The 8/8 was published with **no StillOS triple adapter shipped to produce it**, the same
+unreproducible-claim defect as the strawman row, found by grepping for siblings of that
+defect instead of fixing the one instance. `stillos_triple_adapter.js` now ships and is
+bound to real code (`vauban/encode-verify.js`).
+
+What the honest measurement shows: StillOS has no `{alg, enc, hex}` implementation at
+all. It emits bare 64-char hex, has no `enc` concept and no felt252 masking path. So it
+fails `triple-02` — **it is the 31-in-32 false negative**, the exact bug this suite was
+built to catch, sitting in the stack of the party that built the suite — plus
+`triple-04`/`05`/`06`, accepting records with no `alg`, no `enc`, and an unknown `enc`.
+
+`limbs()` is the one part backed by real shipped code, and it passes, including its own
+division-vs-bitshift cross-check.
+
+A default `node run-all.js` now always prints the StillOS rows underneath the reference
+rows, because a green reference in a repository named after us reads as us being green
+and says nothing of the kind.
+
+The strawman row used to be quoted without shipping the adapter that produces it — an
+unreproducible number in a document whose entire claim is *run it yourself*. It now
+ships as `strawman_record_adapter.js`: complete, correct integrity, and `OK` returned
+to every settlement question. It is not a bad implementation, it is the **shape most
+evidence implementations have today** — and the one settlement assertion it passes,
+`rec-01`, it passes by luck, because it answers `OK` to everything and `rec-01`
+happens to be `OK`.
 
 **We wrote the suite and we do not pass it.** `stillos_adapter.js` is our real
 implementation, not a demo, and it returns `UNSUPPORTED` on six cases rather than
@@ -215,3 +272,54 @@ another implementation's encoder agrees with yours — only that yours follows t
 published rules. Point it at a second encoder to check the last one.
 
 Corrections welcome. If a rule here is wrong, the vector is wrong and should be fixed.
+
+---
+
+## Suite 3 — independent anchor replay (`replay-anchor.js`)
+
+Vectors check encoders. This checks an **anchor someone else published**, with code
+that shares nothing with theirs.
+
+On [#3389](https://github.com/x402-foundation/x402/issues/3389), @seritalien (Vauban)
+anchored a STARK fact on Ethereum Sepolia; @goun7 (Tamga) replayed it with an
+independent pure-python keccak and published a verdict — `indeterminate` on 2026-09-09
+because the epoch had not sealed, then `GREEN` on 2026-09-13 once it had. Two
+implementations, one half each, verdict published either way. That practice is the
+most valuable thing on the thread.
+
+This is the third implementation. `keccak256.js` here is written out by hand — Node's
+`crypto` ships `sha3-256`, which is **not** keccak256 (SHA-3 pads `0x06`, keccak pads
+`0x01`) — and self-tested against three known-answer vectors. No dependency is taken,
+because taking one would defeat the purpose of the cross-check.
+
+```sh
+curl -s https://explorer.testnet.apodix.vauban.tech/v1/anchors/proof/<fact> -o proof.json
+node keccak256.js                              # 3 known-answer vectors first
+node replay-anchor.js --proof ./proof.json     # recompute + read the chain
+```
+
+Result on fact `0x02362521…36e2`, reproduced in this repo as
+`evidence-proof-epoch13.json`:
+
+| step | result |
+|---|---|
+| keccak256 self-test, 3 KAT vectors | PASS |
+| leaf = `keccak256(keccak256(bytes32(fact)))` | `0xc6c8e3b3…19dd` |
+| 6-step sorted-pairs walk, position 55 of 60 | root `0xaaf21f36…c458e` |
+| `eth_call epoch(uint64)` on `0x48421a2e…5cFB14`, chain 11155111 | `factsRoot` identical, `factsCount` 60 |
+
+**GREEN.** The `epoch(uint64)` selector `0xe40fb3a8` is derived with our own keccak
+rather than copied from a block explorer, so no step of the chain read is taken on
+trust either.
+
+**Scope of that green, stated so it cannot be over-read:** the fact is a leaf of a tree
+whose root is anchored at that contract and epoch. It establishes **inclusion in a
+sealed epoch** — not the soundness of the STARK proof the fact attests, and not the
+truth of anything the batch describes. Inclusion is presentation, not truth.
+
+The tool can return three verdicts, not two. If the RPC is unreachable or the contract
+returns nothing decodable it prints `INDETERMINATE` and exits `3`; it never prints red.
+An unreachable source is not evidence of absence — the same rule @goun7 stated, that
+Vauban adopted as §4.4 of the profile, and that this repo enforces as `rec-13`. A tool
+that collapses unknown into false manufactures refutations during someone else's
+outage, and because the failure is transient it never reproduces afterwards.
