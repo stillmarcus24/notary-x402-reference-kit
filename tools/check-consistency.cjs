@@ -139,5 +139,120 @@ if (fs.existsSync(path.join(ROOT, 'SUPERSESSION.json'))) {
   ok('supersession carries a content digest', /^[0-9a-f]{64}$/.test(s.supersession_hash || ''));
 } else { fail++; console.log('  FAIL  SUPERSESSION.json missing'); }
 
+// --- 9. BOND DISCLOSURE PARITY ACROSS EVERY SURFACE THAT MAKES THE CLAIM ---
+//
+// Why this exists (2026-09-14). @0rkz found that README.md still opened with the
+// RETIRED bond wallet `0xA3a05818…` and "pays out on-chain", nine lines above a
+// current, correct paragraph naming the 2-of-2 Safe and the absence of a payout
+// SLA. One stale bullet sitting above a current one — and it is the bullet a
+// reader hits first. The sibling audit that followed found the same unqualified
+// payout claim in TWO more places, including `live-bond-status.json`'s
+// `slash_policy`, which is MACHINE-READABLE and served to counterparties.
+//
+// That is the v1.1 root pattern for the third time: the prose gets corrected and
+// the other surfaces carrying the same claim do not. Sections 3-6 above assert
+// manifest ⇄ terms. Nothing asserted manifest ⇄ README, ⇄ scenario doc, or
+// ⇄ live-bond-status prose. This closes that, generically:
+//
+//   (a) inside a paragraph that talks about the bond, the ONLY wallet address
+//       permitted is the manifest's current bond wallet — so a retired address
+//       cannot silently reappear as the current one, and this stays true when
+//       the wallet rotates again without editing a hardcoded address here;
+//   (b) any paragraph asserting a payout MUST carry the custody qualifier in
+//       that same paragraph — a correct disclosure 27 lines away does not count,
+//       because that is precisely the defect being fixed;
+//   (c) no surface may assert a committed payout SLA while the manifest says
+//       there is none;
+//   (d) no surface may describe the bond's custody as unilateral/single-key.
+console.log('\nbond disclosure parity — every surface that makes the claim\n');
+
+const BOND_SURFACES = ['README.md', 'live-bond-status.json', 'sanctioned-wallet-scenario.md',
+  'docs/FORESEAL_BILATERAL_TERMS_V1_1.md', 'manifest/manifest.md', 'implementation/bond/README.md']
+  .filter(p => fs.existsSync(path.join(ROOT, p)));
+
+// A "correction context" is exempt everywhere below, on the same principle as
+// section 7: preserving what was wrong, verbatim, IS the evidence. The test is
+// that the defective claim is not MADE, not that the characters never appear.
+const CORRECTION = /retract|withdraw|corrected|_correction|previously|superseded|formerly|no longer|must not|banned|swept|retired|moved here|prior revision|V1 said|V1 claimed|at tag foreseal-bilateral-v1|"was"\s*:|reverts to/i;
+
+const BOND_CTX  = /\bbond\b|\bslash|\bcollateral\b|correctness bond/i;
+// Promissory claims only. "`PAID` is written after an on-chain payout is verified"
+// describes a state machine; it does not promise anyone a payment, and demanding a
+// custody qualifier there would be noise that trains people to ignore this check.
+const PAYS      = /pays? out\b|is paid\b|paid up to|disputant is paid|payout is (?:made|sent|executed|automatic)/i;
+const QUALIFIER = /2-of-2|2of2|two human signatures|second human signature|second signature|multisig|not instant|no committed payout sla|NO COMMITTED PAYOUT SLA|governed execution|requires a human/i;
+const UNILATERAL= /unilateral|single-key|single key|hot wallet/i;
+const FAKE_SLA  = /committed payout sla of|payout sla:\s*\d|guaranteed (?:payout|to pay) within|will pay within \d/i;
+
+const BOND_WALLET = m.bond.wallet.toLowerCase();
+// Declared non-bond wallets, plus the word that must appear alongside the address
+// for it to be legible as that role rather than as the bond.
+const OTHER_WALLETS = [
+  { address: m.wallets.stillos_payto_wallet.address,  keyword: 'payTo|settlement|revenue|fee' },
+  { address: m.wallets.stillos_gas_relayer.address,   keyword: 'gas relayer|gas\\b|relayer' },
+].filter(w => w.address && w.address.toLowerCase() !== BOND_WALLET);
+// The unit of assertion is the unit a reader consumes: one bullet, one table row,
+// one prose paragraph, one JSON value. The defect @0rkz found WAS a single bullet
+// sitting above a correct one, so blank-line paragraphs are too coarse — they let a
+// stale bullet inherit the qualifier from a sibling bullet six lines away.
+const paragraphs = (p, body) => p.endsWith('.json')
+  ? Object.entries(JSON.parse(body)).map(([k, v]) => `${k}: ${typeof v === 'string' ? v : JSON.stringify(v)}`)
+  : body.split(/\n\s*\n/).flatMap(para =>
+      /^\s*[-*|]/m.test(para) ? para.split(/\n(?=\s*(?:[-*]\s|\|))/) : [para]);
+
+for (const p of BOND_SURFACES) {
+  const body = read(p);
+  const paras = paragraphs(p, body);
+
+  // (a) no non-current wallet presented inside a bond paragraph
+  const strayWallets = [];
+  for (const para of paras) {
+    if (!BOND_CTX.test(para) || CORRECTION.test(para)) continue;
+    for (const addr of (para.match(/0x[0-9a-fA-F]{40}/g) || [])) {
+      // the USDC token contract is not a wallet claim
+      if (addr.toLowerCase() === m.bond.token_contract.toLowerCase()) continue;
+      if (addr.toLowerCase() === BOND_WALLET) continue;
+      // A non-bond wallet the manifest declares (gas relayer, payTo) may appear in
+      // a bond paragraph ONLY where the unit says which one it is or disclaims the
+      // bond role. Being registered in the manifest is not enough on its own —
+      // `0xA3a05818…` is a registered gas relayer AND was the retired bond wallet,
+      // and it was exactly that ambiguity the README bullet exploited.
+      const role = OTHER_WALLETS.find(w => w.address.toLowerCase() === addr.toLowerCase());
+      if (role && (new RegExp(role.keyword, 'i').test(para) || /not the bond wallet/i.test(para))) continue;
+      strayWallets.push(addr);
+    }
+  }
+  ok(`${p}: bond paragraphs name only the current bond wallet`, strayWallets.length === 0,
+    `${[...new Set(strayWallets)].join(', ')} appears in a bond paragraph; manifest bond wallet is ${m.bond.wallet}`);
+
+  // (b) every payout assertion carries the custody qualifier in its own paragraph
+  const unqualified = paras.filter(para =>
+    BOND_CTX.test(para) && PAYS.test(para) && !QUALIFIER.test(para) && !CORRECTION.test(para));
+  ok(`${p}: every payout claim is qualified in its own paragraph`, unqualified.length === 0,
+    unqualified[0] && unqualified[0].trim().replace(/\s+/g, ' ').slice(0, 140));
+
+  // (c) no invented SLA while the manifest says there is none
+  if (m.payout_obligation.payout_sla.committed_sla === null) {
+    const invented = paras.filter(para => FAKE_SLA.test(para) && !CORRECTION.test(para));
+    ok(`${p}: asserts no committed payout SLA`, invented.length === 0,
+      invented[0] && invented[0].trim().replace(/\s+/g, ' ').slice(0, 140));
+  }
+
+  // (d) custody never described as unilateral. A unit that ALSO names the 2-of-2
+  // is drawing a comparison ("under single-key custody that was survivable; under
+  // 2-of-2 the interval is unbounded"), not asserting unilateral control today.
+  const uni = paras.filter(para => BOND_CTX.test(para) && UNILATERAL.test(para)
+    && !QUALIFIER.test(para) && !CORRECTION.test(para));
+  ok(`${p}: bond custody not described as unilateral/single-key`, uni.length === 0,
+    uni[0] && uni[0].trim().replace(/\s+/g, ' ').slice(0, 140));
+}
+
+// The README is the first thing a reader hits, so it must positively state the
+// two facts a counterparty is most likely to get wrong — not merely avoid denying them.
+const readme = read('README.md');
+ok('README states the current bond wallet', readme.includes(m.bond.wallet), m.bond.wallet);
+ok('README states custody is 2-of-2', /2-of-2/.test(readme));
+ok('README states there is no committed payout SLA', /no committed payout SLA/i.test(readme));
+
 console.log(`\n  ${pass} passed, ${fail} failed\n`);
 process.exit(fail === 0 ? 0 : 1);

@@ -1,8 +1,8 @@
 {
   "digests_version": "STILLOS_NOTARY_KIT_DIGESTS_V1",
   "algorithm": "sha256",
-  "set_digest": "75b87c8051e38fc7c7ab9d15b0e289e0ebd96b3508ba61814f63c577901eae01",
-  "bond_set_digest": "b7be51aafd82db88444fc3d09c5a46bbcd3b885c074caa1a309a516bf3efc19d",
+  "set_digest": "3dbcbcdc384c4c899eea876e3fb81bc1989af614923ee4ce8b30403a4479576b",
+  "bond_set_digest": "1086f2895f753c56ba8ad65dfd85c0afcca72ddd81c401ae17cab626294a55d8",
   "bond_set_digest_preimage": "sha256 over \"<basename>  <sha256>\\n\" lines for implementation/bond/*.cjs, sorted by basename, UTF-8 — compare to GET /notary/bond implementation_digests.bond_set_digest",
   "set_digest_preimage": "sha256 over the concatenation of \"<path>  <sha256>\\n\" lines, in the order listed under files, UTF-8",
   "file_count": 23,
@@ -28,8 +28,8 @@
       "bytes": 11113
     },
     "implementation/bond/verdict_dispute.cjs": {
-      "sha256": "1cd638de82ff166bbde4b838ee55acae5c4c6d07aecf90394c93f4ea01559057",
-      "bytes": 18022
+      "sha256": "7b0b3ee32cef283d833367568ec4091a11a6b0acd7c361afa4927fb2c68aec2e",
+      "bytes": 18415
     },
     "verify-offline-pinned.js": {
       "sha256": "55d3736288e50e3ddd9c099eb243cd6ae850f77d019fc41cdb8cb1cb175ee74b",
@@ -84,8 +84,8 @@
       "bytes": 12293
     },
     "tools/check-consistency.cjs": {
-      "sha256": "3220943034e2b6055752a235b75fb0b91bc35ba14aaf42d52c02ba747e6aed4f",
-      "bytes": 8768
+      "sha256": "3f9f1f3ffe6481775742986b47d0bb29364503b406d0ef4dae5cf9006e9237b2",
+      "bytes": 16303
     },
     "tools/test-slash-obligations.cjs": {
       "sha256": "f0918392570552b3fbf8cc85a16df37016fb39bfbe8893566626299cefc6be0d",

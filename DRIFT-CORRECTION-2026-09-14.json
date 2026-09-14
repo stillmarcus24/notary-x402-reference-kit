@@ -1,0 +1,67 @@
+{
+  "record_type": "PUBLIC_CLAIM_CORRECTION",
+  "date": "2026-09-14",
+  "why_this_file_exists": "A provenance package that silently repairs a false claim about itself has learned nothing. This records the claim, the interval it was false, the evidence, and the mechanism that detects recurrence. Nothing below is deleted from the artifacts it corrects.",
+
+  "corrections": [
+    {
+      "id": "C1",
+      "claim_corrected": "The published implementation is byte-identical to what the service runs.",
+      "where_claimed": [
+        "x402-foundation/tsc#4 comment 5646876128 (2026-09-12)",
+        "manifest/manifest.json parties.stillos.deployment_status"
+      ],
+      "status_when_found": "FALSE",
+      "found_by": "tools/seal-manifest.cjs, which recomputes deployment_status rather than trusting the stored value. It reported: published_matches_running NO -- 5/6 match. Divergence: implementation/bond/verdict_dispute.cjs.",
+      "found_on": "2026-09-14",
+      "false_from": "2026-09-12T15:53Z (approximate: the running service gained the fix while the published copy did not)",
+      "the_divergence": {
+        "file": "implementation/bond/verdict_dispute.cjs",
+        "size": "5 lines, one hunk, at the reputation.recordVerdict call on an upheld dispute",
+        "substance": "resolver_code_hash: (fresh && fresh.resolver_code_hash) || null -- an overturn is a new ruling and must name the resolver code that produced it, not the code that ruled originally. Third of three verdict writers; the other two were corrected 2026-09-12 and this one was missed.",
+        "direction": "The PUBLISHED copy was BEHIND the running service. The service was correct; the artifact was stale.",
+        "new_exposure_assessment": "None. Every identifier in the hunk was already public: the file itself was already published in full, `reputation.recordVerdict` and the local `fresh` are on adjacent published lines, and `resolver_code_hash` is already a pinned public value at manifest/manifest.json:78."
+      },
+      "material_consequence_stated_plainly": "@0rkz's 2026-09-13 assessment read verdict_dispute.cjs at tag foreseal-bilateral-v1.1 to answer whether 2-of-2 custody was material. That assessment stands on its own terms -- the divergence does not touch the obligation path it examined -- but the artifact assessed was not identical to the code running. Saying so is the point of this record."
+    },
+    {
+      "id": "C2",
+      "claim_corrected": "A disputed verdict 'pays out on-chain', stated without the 2-of-2 second-signature qualifier.",
+      "status_when_found": "MISLEADING BY OMISSION",
+      "found_by": "@0rkz identified ONE instance (README.md bond bullet, which also named the retired wallet 0xA3a05818). The sibling audit that followed, and then tools/check-consistency.cjs section 9, found THREE MORE.",
+      "instances": [
+        {"surface": "README.md", "kind": "bond bullet naming the retired wallet 0xA3a05818 as the bond, 'pays out on-chain'", "found_by": "@0rkz, 2026-09-13"},
+        {"surface": "live-bond-status.json", "field": "slash_policy", "kind": "'the disputant is paid up to per_verdict_max_usd from the bond wallet, on-chain' with no second-signature or SLA qualifier", "found_by": "sibling audit", "severity_note": "MACHINE-READABLE and served to counterparties. This is the v1.1 root pattern -- correcting prose while the machine record keeps the defect -- recurring a third time."},
+        {"surface": "sanctioned-wallet-scenario.md", "kind": "same unqualified payout claim", "found_by": "sibling audit"},
+        {"surface": "README.md", "field": "POST /notary/dispute endpoint description", "kind": "'overturned verdicts pay out from the bond on-chain'", "found_by": "tools/check-consistency.cjs section 9 -- missed by human reading of the same file in the same session"}
+      ],
+      "corrected_to": "An overturned verdict opens a durable, non-expiring payout obligation synchronously at the moment of the ruling; the on-chain transfer requires a second human signature (2-of-2 Safe), so there is no committed payout SLA. The obligation is durable; the timing is not guaranteed."
+    }
+  ],
+
+  "recurrence_detection": {
+    "mechanism": "tools/check-consistency.cjs section 9 -- 'bond disclosure parity'",
+    "surfaces_covered": ["README.md", "live-bond-status.json", "sanctioned-wallet-scenario.md", "docs/FORESEAL_BILATERAL_TERMS_V1_1.md", "manifest/manifest.md", "implementation/bond/README.md"],
+    "unit_of_assertion": "One bullet, one table row, one JSON value -- NOT a blank-line paragraph. The defect @0rkz found WAS a single bullet inheriting credibility from a correct sibling nine lines below it, so a paragraph-level check would not have caught it.",
+    "rules": [
+      "Inside a unit that talks about the bond, the only wallet address permitted is manifest.bond.wallet. A manifest-declared non-bond wallet may appear only where the unit names its role or disclaims the bond role -- 0xA3a05818 is BOTH the registered gas relayer AND the retired bond wallet, and that ambiguity is exactly what the bad bullet exploited.",
+      "Every promissory payout claim must carry the custody qualifier IN ITS OWN UNIT. A correct disclosure elsewhere in the file does not count.",
+      "No committed-SLA assertion while the manifest says committed_sla is null.",
+      "Bond custody is never described as unilateral or single-key, unless the same unit names the 2-of-2 (a comparison, not a claim).",
+      "The README must POSITIVELY state the current bond wallet, 2-of-2 custody, and the absence of a committed payout SLA -- not merely avoid denying them."
+    ],
+    "derived_from_manifest": "All rules read manifest.bond.wallet, manifest.wallets.*, and manifest.payout_obligation.payout_sla at runtime. They stay correct across the next wallet rotation with no edit here.",
+    "negative_tests_run": [
+      "Reinstating @0rkz's exact README bullet verbatim -> 2 assertions FAIL, exit 1.",
+      "Reinstating the unqualified /notary/dispute payout wording -> 1 assertion FAILS, exit 1."
+    ],
+    "gating": "tools/publish.sh aborts on any failing gate. That gate was itself repaired 2026-09-12 after a form that could not fail.",
+    "deployment_status_gate": "tools/seal-manifest.cjs RECOMPUTES published_matches_running against the running tree on every seal rather than trusting the stored string. That is what caught C1."
+  },
+
+  "what_was_not_done": [
+    "No tag was moved. foreseal-bilateral-v1 and foreseal-bilateral-v1.1 are unchanged.",
+    "No prior artifact was edited to hide the defect. SUPERSESSION.json and the v1 terms remain published verbatim.",
+    "No payout SLA was invented to make any of this read better. There still is none."
+  ]
+}

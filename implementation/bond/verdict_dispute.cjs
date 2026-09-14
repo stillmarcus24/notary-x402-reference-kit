@@ -232,6 +232,11 @@ async function fileDispute({ verdict_receipt_hash, verdict_object, original_reso
     try {
       reputation.recordVerdict({
         agent, verdict: 'OVERTURNED_ON_DISPUTE', resolver_type: original_resolver_spec.type,
+        // The resolver code that ruled on the OVERTURN is the one that re-resolved
+        // the claim (`fresh`), not whatever ruled originally -- an overturn is a new
+        // ruling and must name its own code. Third of three verdict writers; the
+        // other two were fixed 2026-09-12 and this one was missed.
+        resolver_code_hash: (fresh && fresh.resolver_code_hash) || null,
         settles_against: verdict_object.settles_against, claim_receipt_hash: verdict_object.claim_receipt_hash || null,
         verdict_receipt_hash, ts: disputeObj.resolved_at, claim_text: JSON.stringify(disputeObj),
       });

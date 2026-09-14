@@ -49,9 +49,12 @@ POST /notary/dispute
 ```
 
 This triggers an independent re-run of the original resolver against the
-same named source. If the re-run overturns the original verdict, the bond
-(`live-bond-status.json`, real USDC on Base, independently checkable on-chain)
-pays out on-chain, and the payout is appended to a public slash log. This is
+same named source. If the re-run overturns the original verdict, a payout
+obligation against the bond (`live-bond-status.json`, real USDC on Base,
+independently checkable on-chain) is opened synchronously and durably at that
+moment, and the payout is appended to a public slash log once the transfer
+executes. Custody is a 2-of-2 Safe, so the transfer itself requires a second
+human signature and is not instant; there is no committed payout SLA. This is
 the "paid and false/slashed" state 0xbrainkid named in the original thread as
 the trap that must not collapse into "payment failed" — it doesn't, here,
 because it's tracked as its own terminal state end to end.

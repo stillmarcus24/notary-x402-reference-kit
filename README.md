@@ -58,11 +58,14 @@ This kit lets you check that claim yourself instead of taking our word for it.
   without needing to parse a real multi-agent history. The real chain above
   is the one that actually matters.
 - **`live-bond-status.json`** — a live snapshot of the actual correctness
-  bond: a real, self-custodied USDC bond on Base mainnet
-  (`0xA3a05818d4051BFa759Fb7D936b57C072e4E0Caf`) that pays out on-chain if a
-  disputed verdict is overturned on re-run against its named source-of-record.
-  Independently checkable via `USDC.balanceOf(wallet)` on Base — don't trust
-  the file, check the chain.
+  bond: a real USDC bond on Base mainnet held in a 2-of-2 Gnosis Safe
+  (`0x6243E363a3047173346Fa49C947Db204D4445634`). If a disputed verdict is
+  overturned on re-run against its named source-of-record, a payout obligation
+  is opened **synchronously and durably** at that moment; the on-chain transfer
+  itself requires a second human signature, so there is **no committed payout
+  SLA** — see line 89 below and the terms. Independently checkable via
+  `USDC.balanceOf(wallet)` and the Safe's `getOwners()`/`getThreshold()` on
+  Base — don't trust the file, check the chain.
 - **`sanctioned-wallet-scenario.md`** — walks the exact "agent about to pay a
   sanctioned wallet" scenario end to end against the live, already-deployed
   screening endpoints.
@@ -109,7 +112,8 @@ mechanism, same evidence-record substrate this thread is discussing.
   `/mexico-sanctioned-officials` — real government/international sanctions
   registry checks.
 - `POST /notary/dispute` — files a claim against a receipt_hash; triggers
-  independent resolver re-run; overturned verdicts pay out from the bond
-  on-chain.
+  independent resolver re-run; an overturned verdict opens a durable payout
+  obligation against the bond at that moment, settled on-chain once the 2-of-2
+  Safe's second signature executes it — no committed payout SLA.
 
 Full route list: `https://stillosdigitalholdings.com/notary/.well-known/x402.json`
