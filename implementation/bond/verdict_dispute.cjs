@@ -159,6 +159,44 @@ async function fileDispute({ verdict_receipt_hash, verdict_object, original_reso
   // can be genuinely overturned, not just the binary outcome ones.
   const freshVerdict = fresh.status === 'resolved' ? (fresh.outcome ? 'CONFIRMED' : 'REFUTED') : fresh.status.toUpperCase();
   const upheld = freshVerdict !== verdict_object.verdict;
+
+  // Step 5b: DID THE SOURCE MOVE? (2026-09-14, @renezander030, erc-8004#90)
+  //
+  //   "a slash decided on the later read punishes the wrong party whenever the
+  //    source moved in between."
+  //
+  // For a TIME_VARYING source, a re-read is a NEW observation, not a re-check of
+  // the old one. If the bound observation from claim time no longer matches what
+  // the source says now, the disagreement is between two different moments — not
+  // evidence the original verdict was wrong. Slashing on that punishes the
+  // operator for the world changing. Refuse, and say which observation is which.
+  //
+  // DETERMINISTIC sources are exempt: a re-read there is supposed to be identical,
+  // so a mismatch is a real anomaly (reorg, deleted source, tampering) and is
+  // surfaced rather than silently treated as an overturn.
+  const boundObs = verdict_object.observation || null;
+  const freshObs = fresh.observation || null;
+  if (upheld && boundObs && freshObs && boundObs.observed_sha256 !== freshObs.observed_sha256) {
+    const sourceMoved = {
+      ok: true,
+      dispute_outcome: 'SOURCE_MOVED',
+      upheld: false,
+      slashable: false,
+      error: null,
+      detail: boundObs.source_class === 'DETERMINISTIC'
+        ? `source is classed DETERMINISTIC but its observation changed between claim and dispute — anomaly (reorg, deletion or tampering), not an overturn. Not slashable without investigation.`
+        : `source is TIME_VARYING and its observation changed between claim time and dispute time. The re-read is a different observation, not a refutation of the original. Not slashable.`,
+      bound_observation: { observed_sha256: boundObs.observed_sha256, observed_at: boundObs.observed_at, source_class: boundObs.source_class },
+      dispute_observation: { observed_sha256: freshObs.observed_sha256, observed_at: freshObs.observed_at },
+      settles_against: verdict_object.settles_against,
+    };
+    return sourceMoved;
+  }
+  // A verdict signed BEFORE observation binding existed cannot be checked this way.
+  // Say so on the record instead of pretending the check passed.
+  const observation_binding_status = !boundObs
+    ? 'ABSENT_ON_ORIGINAL — verdict predates observation binding (2026-09-14); source-movement could not be ruled out'
+    : (!freshObs ? 'ABSENT_ON_REREAD' : 'MATCHED');
   // upheld=true  → dispute WINS, original verdict is overturned
   // upheld=false → dispute REJECTED (fresh re-run agrees on the verdict label)
 
@@ -177,6 +215,9 @@ async function fileDispute({ verdict_receipt_hash, verdict_object, original_reso
     original_verdict: verdict_object.verdict, original_outcome: verdict_object.outcome,
     fresh_verdict: freshVerdict, fresh_outcome: fresh.outcome, fresh_status: fresh.status,
     fresh_observed: fresh.observed,
+    observation_binding_status,
+    bound_observation: boundObs,
+    dispute_observation: freshObs,
     upheld,
     // 2026-09-11: this field was read by buildSlashDirective() but never written by
     // anything, so it was permanently null and every upheld dispute emitted a
