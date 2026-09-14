@@ -254,5 +254,25 @@ ok('README states the current bond wallet', readme.includes(m.bond.wallet), m.bo
 ok('README states custody is 2-of-2', /2-of-2/.test(readme));
 ok('README states there is no committed payout SLA', /no committed payout SLA/i.test(readme));
 
+// --- 10. CORRECTION LINEAGE MUST RESOLVE ---
+// A correction that lives only in a comment thread leaves the original signed record
+// looking authoritative. The manifest points at its own retractions; assert the pointer
+// resolves and that every entry it names is actually present in the record it names.
+console.log('\ncorrection lineage\n');
+ok('manifest declares a corrections record', !!(m.corrections && m.corrections.record));
+if (m.corrections && m.corrections.record) {
+  const rec = m.corrections.record;
+  const present = fs.existsSync(path.join(ROOT, rec));
+  ok(`corrections record is published: ${rec}`, present);
+  if (present) {
+    const dc = JSON.parse(read(rec));
+    const ids = new Set((dc.corrections || []).map(c => c.id));
+    for (const e of m.corrections.entries || []) {
+      ok(`correction ${e.id} present in ${rec}`, ids.has(e.id));
+    }
+    ok('corrections record states what was NOT done', Array.isArray(dc.what_was_not_done) && dc.what_was_not_done.length > 0);
+  }
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed\n`);
 process.exit(fail === 0 ? 0 : 1);

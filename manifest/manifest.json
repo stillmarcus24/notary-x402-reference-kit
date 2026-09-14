@@ -1,6 +1,25 @@
 {
   "manifest_version": "foreseal-stillos-interop-v1.1",
   "supersedes": "foreseal-stillos-interop-v1",
+  "corrections": {
+    "record": "DRIFT-CORRECTION-2026-09-14.json",
+    "rule": "A claim in this manifest that is later found false is retracted in that file, naming the claim, the interval it was false, how it was found, the diff, and the mechanism that detects recurrence. The manifest points AT the retraction so a reader who never saw the discussion still finds it.",
+    "why": "A correction that lives only in a comment thread leaves the original signed record looking authoritative. tools/check-consistency.cjs asserts this pointer resolves.",
+    "entries": [
+      {
+        "id": "C1",
+        "claim": "The published implementation is byte-identical to what the service runs.",
+        "status": "was FALSE 2026-09-12 to 2026-09-14",
+        "now": "restored, published_matches_running YES 6/6"
+      },
+      {
+        "id": "C2",
+        "claim": "A disputed verdict pays out on-chain (stated without the 2-of-2 qualifier).",
+        "status": "was MISLEADING BY OMISSION on 4 surfaces, 1 machine-readable",
+        "now": "corrected; tools/test-disclosure-parity.cjs reinstates each verbatim and asserts it is caught"
+      }
+    ]
+  },
   "date_created": "2026-09-06",
   "date_corrected": "2026-09-11",
   "status": "TERMS_FROZEN — TEST NOT YET EXECUTED",
@@ -37,7 +56,7 @@
         "verify-offline-pinned.js": "55d3736288e50e3ddd9c099eb243cd6ae850f77d019fc41cdb8cb1cb175ee74b"
       },
       "deployment_status": {
-        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-14T20:05:34.351Z)",
+        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-14T20:10:41.431Z)",
         "note": "Whether the code published above is byte-identical to what the live notary process is running. Stated explicitly because a published implementation that differs from the deployed one is a provenance claim that fails exactly where it matters.",
         "continuous_check": "tools/drift-sentinel.cjs — four axes (internal, runtime, published, live). Runnable by anyone, no box and no callback required. SCHEDULING STATUS: run on demand only; no cron is installed as of 2026-09-14. Stated explicitly because claiming a schedule we do not run would be the same defect class this tool exists to catch."
       },

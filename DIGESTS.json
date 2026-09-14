@@ -1,7 +1,7 @@
 {
   "digests_version": "STILLOS_NOTARY_KIT_DIGESTS_V1",
   "algorithm": "sha256",
-  "set_digest": "e418b92c7235d91ecda290ab22457a356e0a17caddc4db5c66d3417f19b631e9",
+  "set_digest": "76f73c882f33eb8e2e94063cde1e3cde21d3f18d6650352df7701cd8feb9d9ab",
   "bond_set_digest": "1086f2895f753c56ba8ad65dfd85c0afcca72ddd81c401ae17cab626294a55d8",
   "bond_set_digest_preimage": "sha256 over \"<basename>  <sha256>\\n\" lines for implementation/bond/*.cjs, sorted by basename, UTF-8 — compare to GET /notary/bond implementation_digests.bond_set_digest",
   "set_digest_preimage": "sha256 over the concatenation of \"<path>  <sha256>\\n\" lines, in the order listed under files, UTF-8",
@@ -84,8 +84,8 @@
       "bytes": 12293
     },
     "tools/check-consistency.cjs": {
-      "sha256": "3f9f1f3ffe6481775742986b47d0bb29364503b406d0ef4dae5cf9006e9237b2",
-      "bytes": 16303
+      "sha256": "60816c3048d63fa3e67e44b019d21673a84dec614e8b389cb5bd1e054c75edfc",
+      "bytes": 17308
     },
     "tools/test-slash-obligations.cjs": {
       "sha256": "f0918392570552b3fbf8cc85a16df37016fb39bfbe8893566626299cefc6be0d",
