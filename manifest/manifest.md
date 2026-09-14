@@ -6,7 +6,7 @@
 - Version: `foreseal-stillos-interop-v1.1` (supersedes `foreseal-stillos-interop-v1`)
 - Status: **TERMS_FROZEN — TEST NOT YET EXECUTED**
 - Release tag: `foreseal-bilateral-v1.1` — resolve with `git rev-list -n1 foreseal-bilateral-v1.1  — or GET https://api.github.com/repos/stillmarcus24/notary-x402-reference-kit/tags`
-- Canonical manifest SHA-256: `ee4ddeb5373e1b9614954d72ab8cdce7f4e949f2a181c250a518801ce0fdd8b8`
+- Canonical manifest SHA-256: `1c879eb58f07e124bde785e21ace53d43ab3a0ffa13c987485edb4e36043685b`
 
 ## Tag immutability
 
@@ -81,7 +81,7 @@ Whether the absence of a payout SLA makes ForeSeal's Precondition 1 unsatisfied 
 
 ## Published implementation
 
-Deployment status: YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-14T17:44:15.619Z)
+Deployment status: YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-14T17:45:26.142Z)
 
 | File | SHA-256 |
 |---|---|

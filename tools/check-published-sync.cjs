@@ -38,6 +38,8 @@ const NOT_PUBLISHED = [
   /^TSC-BRIEF-/,
   /-HOLD-FOR-APPROVAL\.md$/,
   /^docs\/BOND_FUNDING_PROPOSAL\.md$/,
+  // runtime artifact of tools/drift-sentinel.cjs, regenerated every run
+  /^state-drift-sentinel\.json$/,
   /^node_modules\//,
   /^\.git/,
 ];

@@ -74,6 +74,7 @@ rsync -a --delete \
   --exclude 'TSC-BRIEF-*' \
   --exclude '*-HOLD-FOR-APPROVAL.md' \
   --exclude 'docs/BOND_FUNDING_PROPOSAL.md' \
+  --exclude 'state-drift-sentinel.json' \
   "$SRC/" "$WORK/kit/"
 
 cd "$WORK/kit"
