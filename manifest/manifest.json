@@ -37,10 +37,12 @@
         "verify-offline-pinned.js": "55d3736288e50e3ddd9c099eb243cd6ae850f77d019fc41cdb8cb1cb175ee74b"
       },
       "deployment_status": {
-        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-14T17:23:31.428Z)",
-        "note": "Whether the code published above is byte-identical to what the live notary process is running. Stated explicitly because a published implementation that differs from the deployed one is a provenance claim that fails exactly where it matters."
+        "published_matches_running": "YES — all 6 published bond files are byte-identical to /home/marcus/core (verified 2026-09-14T17:42:07.734Z)",
+        "note": "Whether the code published above is byte-identical to what the live notary process is running. Stated explicitly because a published implementation that differs from the deployed one is a provenance claim that fails exactly where it matters.",
+        "continuous_check": "tools/drift-sentinel.cjs — four axes (internal, runtime, published, live), cron every 30 min. Added 2026-09-14 after this exact field went stale for two days between publishes."
       },
-      "public_base_url": "https://stillosdigitalholdings.com/notary"
+      "public_base_url": "https://stillosdigitalholdings.com/notary",
+      "implementation_source_dir": "/home/marcus/core"
     },
     "foreseal": {
       "implementation": "ForeSeal (as identified publicly by @0rkz on x402-foundation/x402#2887)",
