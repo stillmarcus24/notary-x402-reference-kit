@@ -61,6 +61,7 @@ run_gate() {
 run_gate "digests    " "$SRC"            node tools/verify-digests.cjs
 run_gate "consistency" "$SRC"            node tools/check-consistency.cjs
 run_gate "obligations" "$SRC"            node tools/test-slash-obligations.cjs
+run_gate "parity-neg " "$SRC"            node tools/test-disclosure-parity.cjs
 run_gate "conformance" "$SRC/conformance" node run-all.js
 
 echo "==> cloning $REPO"
