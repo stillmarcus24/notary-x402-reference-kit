@@ -1,8 +1,8 @@
 {
-  "_status": "PRE-ANCHOR VECTOR. The STILLOS_NOTARY_RECEIPT_V1 origin tag has been accepted by Vauban (2026-09-09, see candidate_origin_tag.acceptance_reference). No StillOS digest has been anchored in a real Vauban v3 batch yet. This vector demonstrates local encoding correctness against Vauban's published spec; it is not a claim that anchoring has occurred.",
+  "_status": "ANCHORED. This digest was included as a STILLOS_NOTARY_RECEIPT_V1 foreign leaf in a Vauban Apodix v3 batch on 2026-09-14 (see the `anchor` block below for the fact identifier and the independent on-chain observation). The origin-side recomputation is published at stillmarcus24/stillos-notary#1. Superseded the prior PRE-ANCHOR status, which stated that no StillOS digest had been anchored -- true when written, false as of 2026-09-14.",
   "vector_version": "stillos-vauban-foreign-leaf-v1",
   "generated": "2026-09-08",
-  "last_updated": "2026-09-09",
+  "last_updated": "2026-09-14",
   "vauban_spec_reference": {
     "source": "x402-foundation/x402#3389 (comment by @seritalien, 2026-09-08T15:53:58Z) and vauban-org/x402-starknet docs/stark-receipt-profile-v0.1.md §4.1-4.2, re-fetched and cross-checked live during this pass -- byte-identical formula in both sources, no drift.",
     "v3_root_preimage": "Poseidon(['VZKPAY_AGGROOT_V3', K, currency_id, subject_type, (subject, nullifier, amount) x K, F, (origin_tag, digest_lo, digest_hi) x F])",
@@ -22,6 +22,27 @@
     "receipt_hash_hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
     "digest_algorithm": "SHA-256 (see ../docs/STILLOS_NOTARY_RECEIPT_V1.md for the full preimage/canonicalization spec)"
   },
+  "anchor": {
+    "anchoring_layer": "Vauban Apodix",
+    "attribution_note": "Named per the term stated by @seritalien in stillmarcus24/stillos-notary#1 before inclusion: any kit or receipt chain carrying this leaf names the anchoring layer as Vauban Apodix, with the fact identifier.",
+    "fact": "0x066cfbb6f92b3215ef843df1e5ea73035ad309f04e6a2c672b810ccae6045f8f",
+    "batch_root": "0x03ec3a4d0924c76e437f64e6f0565f3386e60632eb996c0305528027ded65a43",
+    "apodix_registry_entry_seq": 62,
+    "batch_contents": "7 real Sepolia settlements from 2026-09-13, per Vauban",
+    "independently_observed": {
+      "method": "Read through a neutral public Starknet Sepolia RPC (drpc), deliberately NOT sepolia.rpc.vauban.tech -- an anchor verified with the anchoring party's own endpoint is not independently verified.",
+      "chain": "starknet-sepolia",
+      "block_number": 15067906,
+      "block_status": "ACCEPTED_ON_L1",
+      "block_timestamp": "2026-09-14T17:36:20Z",
+      "transaction_hash": "0x171cbdcfdbc0ca679ab1004fcc971892a9d0b2ab7c645c733949616d5c04cea",
+      "execution_status": "SUCCEEDED",
+      "fact_emitting_contract": "0x4ce7851f00b6c3289674841fd7a1b96b6fd41ed1edc248faccd672c26371b8c",
+      "verifier_contract": "0x5e529706944049bb2be637a26a4d78b32e554ecaa54d0e608f2fa9f1472c516",
+      "verifier_settings": "recursive_with_poseidon / keccak_160_lsb / stone6 / strict"
+    },
+    "NOT_yet_independently_verified": "That the batch root commits to THIS leaf. What was observed is that the fact exists, is registered and is verified on Starknet Sepolia. Inclusion of this specific digest under that root requires the epoch inclusion proof, served once the Apodix epoch is anchored on Ethereum Sepolia. Until that path is recomputed locally, 'Vauban asserts inclusion' and 'inclusion is proven' are two different statements and this file does not merge them."
+  },
   "foreign_leaf_encoding": {
     "enc": "none",
     "full_32_byte_digest_hex": "636ec23cec4628502312ddde24bc620bee54bf83bd85759eadabf810230a4536",
@@ -39,6 +60,6 @@
   },
   "what_this_vector_does_and_does_not_prove": {
     "proves": "The StillOS receipt_hash correctly and losslessly maps to Vauban's published v3 foreign-leaf digest_lo/digest_hi encoding, computed independently with no dependency on Vauban's own code.",
-    "does_not_prove": "That this specific digest has been included in any real v3 batch, that a StillOS receipt has ever been anchored on Starknet, or that Vauban's own implementation produces the identical limb split (this vector was not cross-verified against Vauban's own encoder -- only against their published formula). Vauban's acceptance of the tag convention is recorded in candidate_origin_tag.acceptance_reference and is not a statement about any of the above."
+    "does_not_prove": "That the Vauban batch root provably commits to this leaf -- that needs the epoch inclusion proof (see anchor.NOT_yet_independently_verified), and that the StillOS receipt's underlying claim is TRUE. Anchoring establishes presentation and existence, not correctness; adjudicating the claim is Leg 2's separate mechanism. This vector was also not cross-verified against Vauban's own encoder, only against their published formula."
   }
 }
